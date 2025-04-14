@@ -1,0 +1,76 @@
+﻿@using shop_cart.Services
+@inject CartService CartService
+@implements IDisposable
+<div class="container-fluid">
+    <div class="row">
+       
+        <div class="col">
+            <nav class="navbar navbar-expand-sm navbar-light bg-light fixed-top shadow-sm w-100">
+
+                <div class="container-fluid justify-content-start">
+                    <!-- Logo -->
+                    <a class="navbar-brand d-flex align-items-center me-3" href="/">
+                        <img src="https://getbootstrap.com/docs/5.0/assets/brand/bootstrap-logo.svg" alt="Logo" style="height: 40px;" class="me-2" />
+                        <span>MiEmpresa</span>
+                    </a>
+
+                    <!-- Botón menú (sidebar) -->
+                    <button class="btn btn-outline-secondary me-3" @onclick="ToggleSidebar">
+                        <i class="bi bi-list"></i>
+                    </button>
+
+
+                    <!-- Formulario de búsqueda (flex-grow para que tome el espacio restante) -->
+                    <form class="flex-grow-1 me-3">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Buscar productos..." />
+                            <button class="btn btn-outline-secondary" type="submit">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Botón del carrito -->
+                    <button class="btn btn-outline-primary position-relative">
+                        <i class="bi bi-cart"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            @CartService.CarritoCantidad
+                        </span>
+                    </button>
+
+                </div>
+
+              
+            </nav>
+
+        </div>
+      
+
+    </div>
+   
+</div>
+
+@code {
+    
+     
+
+    protected override void OnInitialized()
+    {
+       CartService.OnChange += StateHasChanged;
+        
+    }
+      
+    public void Dispose()
+    {
+        CartService.OnChange -= StateHasChanged;
+    }
+
+    private void ToggleSidebar()
+    {
+        Console.WriteLine("Toggle menu sidebar");
+        // Aquí puedes lanzar un evento o usar un servicio para abrir el menú lateral
+    }
+}
+
+
+ 

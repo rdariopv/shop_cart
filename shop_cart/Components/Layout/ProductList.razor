@@ -1,0 +1,23 @@
+﻿@using shop_cart.Models
+<h3>ProductList</h3>
+
+<div class="container mt-4">
+    <div class="row">
+        @foreach (var producto in productos)
+        {
+            <ProductCard ProductId="@producto.Id" ImageUrl="@producto.Imagen" Title="@producto.Nombre" Description="@producto.Descripcion" />
+        }
+    </div>
+</div>
+
+@code {
+    private List<Product> productos = new()
+    {
+        new Product { Id = "1", Nombre = "Producto 1", Descripcion = "Descripción breve del producto.", Imagen = "images/product1.jpg" },
+        new Product { Id = "2", Nombre = "Producto 2", Descripcion = "Descripción breve del producto.", Imagen = "images/product2.jpg" },
+        new Product { Id = "3", Nombre = "Producto 3", Descripcion = "Descripción breve del producto.", Imagen = "images/product3.jpg" },
+        // Agrega más productos aquí...
+    };
+
+  
+}

@@ -1,0 +1,41 @@
+﻿
+<nav class="navbar navbar-expand-lg navbar-light bg-light px-3 shadow-sm">
+    <!-- Botón para abrir el sidebar -->
+    <button class="btn btn-outline-secondary me-2" @onclick="ToggleSidebar">
+        <i class="bi bi-list"></i> <!-- Ícono de menú -->
+    </button>
+
+    <!-- Logo -->
+    <a class="navbar-brand d-flex align-items-center me-auto" href="#">
+        <img src="logo.png" alt="Logo" style="height: 40px;" class="me-2" />
+        <span>MiEmpresa</span>
+    </a>
+
+    <!-- Formulario de búsqueda -->
+    <form class="d-flex mx-auto" role="search">
+        <div class="input-group">
+            <input class="form-control" type="search" placeholder="Buscar..." aria-label="Buscar">
+            <button class="btn btn-outline-secondary" type="submit">
+                <i class="bi bi-search"></i>
+            </button>
+        </div>
+    </form>
+
+    <!-- Botón del carrito -->
+    <button class="btn btn-outline-primary position-relative ms-3">
+        <i class="bi bi-cart"></i>
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            @CarritoCantidad
+        </span>
+    </button>
+</nav>
+@code {
+    private int CarritoCantidad = 3;
+
+    private void ToggleSidebar()
+    {
+        // Aquí puedes invocar un evento o lógica para abrir tu menú lateral
+        Console.WriteLine("Sidebar toggle");
+    }
+}
+
