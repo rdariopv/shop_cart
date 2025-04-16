@@ -8,9 +8,12 @@ builder.Services.AddSingleton<CartService>();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-//builder.WebHost.UseUrls("http://*:80");
+
+builder.WebHost.UseUrls("http://*:80");
 
 var app = builder.Build();
+//app.MapRazorComponents<App>()
+//    .AddInteractiveServerRenderMode(); // ? Este también
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

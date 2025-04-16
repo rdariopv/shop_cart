@@ -1,14 +1,13 @@
 ﻿@using shop_cart.Services
-@inject CartService CartService
 @implements IDisposable
+@inject CartService CartService
+@rendermode InteractiveServer
+
 <div class="container-fluid">
     <div class="row">
        
         <div class="col">
             <nav class="navbar navbar-expand-sm navbar-light bg-light fixed-top shadow-sm w-100">
-
-                <p>@mensaje</p>
-
                 <div class="container-fluid justify-content-start">
                     <!-- Logo -->
                     <a class="navbar-brand d-flex align-items-center me-3" href="/">
@@ -48,11 +47,12 @@
 
 @code {
     
-    private string mensaje = "Esperando...";
+   // private string mensaje = "Esperando...";
 
     protected override void OnInitialized()
     {
        CartService.OnChange += StateHasChanged;
+        StateHasChanged(); // <-- Forzamos un primer render
         
     }
       

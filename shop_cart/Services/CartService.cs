@@ -12,14 +12,17 @@ namespace shop_cart.Services
 
         public int CarritoCantidad { get; private set; } = 0;
 
-        public void AgregarProducto1()
-        {
-            CarritoCantidad++;
-            NotifyStateChanged();
-        }
+       
         public void AgregarProducto(Product producto, int cantidad)
         {
             CarritoCantidad += cantidad;
+            Console.WriteLine($"Carrito ahora tiene {CarritoCantidad} items");
+            NotifyStateChanged();
+        }
+        public void AgregarProductoById(string productoId, int cantidad)
+        {
+            CarritoCantidad += cantidad;
+            Console.WriteLine($"Carrito ahora tiene {CarritoCantidad} items");
             NotifyStateChanged();
         }
 

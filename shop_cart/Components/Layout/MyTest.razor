@@ -1,0 +1,19 @@
+﻿@page "/mytest"
+<h3>Prueba de botón</h3>
+
+<br />
+<br />
+<br />
+<button class="btn btn-success" type="button" @onclick="TestBoton1">Clic aquí</button>
+
+@code {
+    protected override void OnInitialized() { 
+        Console.WriteLine("Página TEST inicializada correctamente");
+        
+    }
+
+    private void TestBoton1()
+    {
+        Console.WriteLine("Botón clickeado");
+    }
+}

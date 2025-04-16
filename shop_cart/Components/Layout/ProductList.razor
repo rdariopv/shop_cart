@@ -1,4 +1,6 @@
 ﻿@using shop_cart.Models
+@using shop_cart.Services
+
 <h3>ProductList</h3>
 
 <div class="container mt-4">
@@ -11,6 +13,7 @@
 </div>
 
 @code {
+    private Product Producto = new();
     private List<Product> productos = new()
     {
         new Product { Id = "1", Nombre = "Producto 1", Descripcion = "Descripción breve del producto.", Imagen = "images/product1.jpg" },
@@ -18,6 +21,7 @@
         new Product { Id = "3", Nombre = "Producto 3", Descripcion = "Descripción breve del producto.", Imagen = "images/product3.jpg" },
         // Agrega más productos aquí...
     };
+
 
   
 }
