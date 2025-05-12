@@ -7,7 +7,7 @@
     <div class="row">
         @foreach (var producto in productos)
         {
-            <ProductCard ProductId="@producto.Id" ImageUrl="@producto.Imagen" Title="@producto.Nombre" Description="@producto.Descripcion" />
+            <ProductCard ProductId="@producto.Id" ImageUrl="@producto.Imagen" Title="@producto.Nombre" Description="@producto.Descripcion"  Price="@producto.Precio" />
         }
     </div>
 </div>
@@ -16,9 +16,12 @@
     private Product Producto = new();
     private List<Product> productos = new()
     {
-        new Product { Id = "1", Nombre = "Producto 1", Descripcion = "Descripción breve del producto.", Imagen = "images/product1.jpg" },
-        new Product { Id = "2", Nombre = "Producto 2", Descripcion = "Descripción breve del producto.", Imagen = "images/product2.jpg" },
-        new Product { Id = "3", Nombre = "Producto 3", Descripcion = "Descripción breve del producto.", Imagen = "images/product3.jpg" },
+        new Product { Id = "1", Nombre = "Producto 1", Descripcion = "Descripción breve del producto.", Imagen = "images/product1.jpg", Precio=45 },
+        new Product { Id = "2", Nombre = "Producto 2", Descripcion = "Descripción breve del producto.", Imagen = "images/product2.jpg", Precio=46 },
+        new Product { Id = "3", Nombre = "Producto 3", Descripcion = "Descripción breve del producto.", Imagen = "images/product3.jpg", Precio=12 },
+        new Product { Id = "4", Nombre = "Producto 4", Descripcion = "Descripción breve del producto.", Imagen = "images/product4.jpg", Precio=13 },
+        new Product { Id = "5", Nombre = "Producto 5", Descripcion = "Descripción breve del producto.", Imagen = "images/product1.jpg", Precio=45 },
+        new Product { Id = "6", Nombre = "Producto 6", Descripcion = "Descripción breve del producto.", Imagen = "images/product2.jpg", Precio=45 },
         // Agrega más productos aquí...
     };
 

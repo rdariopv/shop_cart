@@ -2,6 +2,7 @@
 
 
 @using Microsoft.AspNetCore.Components
+@using shop_cart.Models
 @using shop_cart.Services
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
@@ -13,6 +14,7 @@
         <div class="card-body">
             <h5 class="card-title">@Title</h5>
             <p class="card-text">@Description</p>
+            <p class="text-primary h5">$@Price</p>
             @* <a href="#" onclick="AgregarAlCarrito" class="btn btn-primary">Comprar</a> *@
             <button type="button" class="btn btn-primary" @onclick="AgregarAlCarrito">Comprar</button>
             <a href="@($"/producto/{ProductId}")" class="btn btn-outline-primary">Ver detalles</a>
@@ -27,12 +29,20 @@
     [Parameter] public string ImageUrl { get; set; }
     [Parameter] public string Title { get; set; }
     [Parameter] public string Description { get; set; }
+    [Parameter] public decimal Price { get; set; }
+
 
 
     private void AgregarAlCarrito()
     {
         //Console.WriteLine($"Agregado: {Producto.Nombre}, Cantidad: {Cantidad}");
         // Aquí iría la lógica para agregar al carrito
-        CartService.AgregarProductoById(ProductId, 1);
+        Product product = new Product();
+        product.Id = ProductId;
+        product.Imagen = ImageUrl;
+        product.Nombre  = Title;
+        product.Precio  = Price;
+        product.Descripcion  = Description;
+        CartService.AgregarProducto(product, 1);
     }
 }

@@ -1,0 +1,158 @@
+﻿@page "/checkout"
+@using shop_cart.Services
+@inject CartService CartService
+<br />
+<div class="container mt-4">
+    <h2 class="mb-4">Formulario de Pago</h2>
+    <div class="row g-5">
+        <!-- Formulario -->
+        <div class="col-md-7 col-lg-8">
+            <form class="needs-validation" novalidate>
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <label for="firstName" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="firstName" required>
+                        <div class="invalid-feedback">
+                            Se requiere un nombre válido.
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6">
+                        <label for="lastName" class="form-label">Apellido</label>
+                        <input type="text" class="form-control" id="lastName" required>
+                        <div class="invalid-feedback">
+                            Se requiere un apellido válido.
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label for="email" class="form-label">Correo electrónico</label>
+                        <input type="email" class="form-control" id="email" placeholder="tucorreo@ejemplo.com">
+                        <div class="invalid-feedback">
+                            Ingresa un correo válido.
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label for="address" class="form-label">Dirección</label>
+                        <input type="text" class="form-control" id="address" placeholder="Calle 123" required>
+                        <div class="invalid-feedback">
+                            Por favor ingresa tu dirección de envío.
+                        </div>
+                    </div>
+
+                    <div class="col-md-5">
+                        <label for="country" class="form-label">País</label>
+                        <select class="form-select" id="country" required>
+                            <option value="">Elegir...</option>
+                            <option>España</option>
+                            <option>México</option>
+                            <option>Colombia</option>
+                        </select>
+                        <div class="invalid-feedback">
+                            Selecciona un país válido.
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="state" class="form-label">Provincia/Estado</label>
+                        <input type="text" class="form-control" id="state" required>
+                        <div class="invalid-feedback">
+                            Ingresa una provincia válida.
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="zip" class="form-label">Código postal</label>
+                        <input type="text" class="form-control" id="zip" required>
+                        <div class="invalid-feedback">
+                            Código postal requerido.
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <h4 class="mb-3">Pago</h4>
+
+                <div class="my-3">
+                    <div class="form-check">
+                        <input id="credit" name="paymentMethod" type="radio" class="form-check-input" checked required>
+                        <label class="form-check-label" for="credit">Tarjeta de crédito</label>
+                    </div>
+                    <div class="form-check">
+                        <input id="debit" name="paymentMethod" type="radio" class="form-check-input" required>
+                        <label class="form-check-label" for="debit">Tarjeta de débito</label>
+                    </div>
+                    <div class="form-check">
+                        <input id="paypal" name="paymentMethod" type="radio" class="form-check-input" required>
+                        <label class="form-check-label" for="paypal">PayPal</label>
+                    </div>
+                </div>
+
+                <div class="row gy-3">
+                    <div class="col-md-6">
+                        <label for="cc-name" class="form-label">Nombre en la tarjeta</label>
+                        <input type="text" class="form-control" id="cc-name" required>
+                        <small class="text-muted">Nombre completo como se muestra en la tarjeta</small>
+                        <div class="invalid-feedback">
+                            Se requiere el nombre de la tarjeta.
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="cc-number" class="form-label">Número de tarjeta</label>
+                        <input type="text" class="form-control" id="cc-number" required>
+                        <div class="invalid-feedback">
+                            Se requiere el número de tarjeta.
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="cc-expiration" class="form-label">Expiración</label>
+                        <input type="text" class="form-control" id="cc-expiration" required>
+                        <div class="invalid-feedback">
+                            Fecha de expiración requerida.
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="cc-cvv" class="form-label">CVV</label>
+                        <input type="text" class="form-control" id="cc-cvv" required>
+                        <div class="invalid-feedback">
+                            Código de seguridad requerido.
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <button class="w-100 btn btn-primary btn-lg" type="submit">Finalizar Compra</button>
+            </form>
+        </div>
+
+        <!-- Resumen del carrito -->
+        <div class="col-md-5 col-lg-4 order-md-last">
+            <h4 class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-primary">Tu carrito</span>
+                <span class="badge bg-primary rounded-pill">@CartService.GetCartCount()</span>
+            </h4>
+            <ul class="list-group mb-3">
+                @foreach (var item in CartService.GetCartItems())
+                {
+                    <li class="list-group-item d-flex justify-content-between lh-sm">
+                        <div>
+                            <h6 class="my-0">@item.Name x @item.Quantity</h6>
+                            <small class="text-muted">ID: @item.ProductItem.Id</small>
+                        </div>
+                        <span class="text-muted">$@((item.Price * item.Quantity).ToString("F2"))</span>
+                    </li>
+                }
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>Total</span>
+                    <strong>$@CartService.GetCartItems().Sum(i => i.Price * i.Quantity).ToString("F2")</strong>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>

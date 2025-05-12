@@ -1,0 +1,105 @@
+﻿@using shop_cart.Models
+@using shop_cart.Services
+@rendermode InteractiveServer
+@inject NavigationManager Navigation
+ @inject CartService CartService
+ @page "/cart"
+<br />
+<br />
+<div class="container mt-4">
+    <h2>🛒 Tu Carrito</h2>
+
+    @if (CartService.GetCartItems().Count == 0)
+    {
+        <div class="alert alert-info mt-4">
+            El carrito está vacío. Agrega productos para verlos aquí.
+        </div>
+    }
+    else
+    {
+        <ul class="list-group mb-4">
+            @foreach (var item in CartService.GetCartItems())
+            {
+                <li class="list-group-item">
+                    <div class="d-flex align-items-center">
+                      @*   <img src="@item.ProductItem.Imagen" alt="Imagen del producto" width="100" height="100" class="card-img-top img-fluid me-3 rounded border" /> *@
+                        <img src="@item.ProductItem.Imagen" alt="Imagen del producto" width="200" height="150" class="me-3 rounded border" />
+                        <div class="flex-grow-1">
+                            <h5>@item.Name</h5>
+                            <p class="mb-1">@item.ProductItem.Descripcion</p>
+                            <p class="mb-1"><strong>ID:</strong> @item.ProductItem.Id</p>
+                            <p class="mb-1"><strong>Precio:</strong> $@item.Price</p>
+                            <p class="mb-1"><strong>Cantidad:</strong> @item.Quantity</p>
+                        </div>
+
+                        <div class="text-end">
+                            <button class="btn btn-outline-primary btn-sm me-1" @onclick="() => Incrementar(item)">➕ Agregar</button>
+                          
+                            <button class="btn btn-outline-secondary btn-sm me-1" @onclick="() => Decrementar(item)">➖ Quitar</button>
+                           
+                            <button class="btn btn-outline-danger btn-sm" @onclick="() => Eliminar(item)">🗑 Eliminar</button>
+                        </div>
+                    </div>
+                </li>
+            }
+
+            <li class="list-group-item">
+                <div class="d-flex justify-content-end align-items-center gap-4">
+                        <h4 class="mb-0">Total: <span class="text-success">$@CalcularTotal().ToString("F2")</span></h4>
+                    <button class="btn btn-success" @onclick="IrAlCheckout">Proceder al pago</button>
+                </div>
+            </li>
+
+        </ul>
+
+        <div class="container mt-4">
+           
+        </div>
+    }
+</div>
+
+@code {
+    void IrAlCheckout()
+    {
+        Navigation.NavigateTo("/checkout", forceLoad: true);
+    }
+    private void Incrementar(CartItem item)
+    {
+        item.Quantity++;
+    }
+
+    private void Decrementar(CartItem item)
+    {
+        if (item.Quantity > 1)
+            item.Quantity--;
+        else
+            CartService.RemoveItem(item);
+    }
+
+    private void Eliminar(CartItem item)
+    {
+        CartService.RemoveItem(item);
+    }
+
+    private decimal CalcularTotal()
+    {
+        return CartService.GetCartItems().Sum(i => i.Price * i.Quantity);
+    }
+}
+
+@* 
+<h3>Cart Details</h3>
+
+@if (CartService.GetCartItems().Count == 0)
+{
+    <p>Tu carrito está vacío.</p>
+}
+else
+{
+    <ul>
+        @foreach (var item in CartService.GetCartItems())
+        {
+            <li>@item.Name - Cantidad: @item.Quantity - Precio: @item.Price.ToString("C")</li>
+        }
+    </ul>
+} *@

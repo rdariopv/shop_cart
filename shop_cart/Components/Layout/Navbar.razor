@@ -2,6 +2,7 @@
 @implements IDisposable
 @inject CartService CartService
 @rendermode InteractiveServer
+@inject NavigationManager Navigation
 
 <div class="container-fluid">
     <div class="row">
@@ -32,7 +33,7 @@
                     </form>
 
                     <!-- Botón del carrito -->
-                    <button class="btn btn-outline-primary position-relative">
+                    <button class="btn btn-outline-primary position-relative" @onclick="IrAlCarrito" >
                         <i class="bi bi-cart"></i>
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                             @CartService.CarritoCantidad
@@ -60,7 +61,10 @@
     {
         CartService.OnChange -= StateHasChanged;
     }
-
+    private void IrAlCarrito()
+    {
+        Navigation.NavigateTo("/cart", forceLoad: true);
+    }
     private void ToggleSidebar()
     {
         Console.WriteLine("Toggle menu sidebar");
