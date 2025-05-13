@@ -1,9 +1,15 @@
 ﻿@page "/checkout"
 @using shop_cart.Services
+@rendermode InteractiveServer
+@inject NavigationManager Navigation
 @inject CartService CartService
 <br />
 <div class="container mt-4">
-    <h2 class="mb-4">Formulario de Pago</h2>
+    <div class="mb-3 text-center">
+        <i class="bi bi-cart-check-fill fs-1 text-primary"></i>
+    </div>
+    <h2 class="mb-4 text-center">Formulario de Pago</h2>
+
     <hr class="my-4">
     <div class="row g-5">
         <!-- Formulario -->
@@ -35,42 +41,6 @@
                         </div>
                     </div>
 
-                   @*  <div class="col-12">
-                        <label for="address" class="form-label">Dirección</label>
-                        <input type="text" class="form-control" id="address" placeholder="Calle 123" required>
-                        <div class="invalid-feedback">
-                            Por favor ingresa tu dirección de envío.
-                        </div>
-                    </div> *@
-
-                    @* <div class="col-md-5">
-                        <label for="country" class="form-label">País</label>
-                        <select class="form-select" id="country" required>
-                            <option value="">Elegir...</option>
-                            <option>España</option>
-                            <option>México</option>
-                            <option>Colombia</option>
-                        </select>
-                        <div class="invalid-feedback">
-                            Selecciona un país válido.
-                        </div>
-                    </div> *@
-
-                    @* <div class="col-md-4">
-                        <label for="state" class="form-label">Provincia/Estado</label>
-                        <input type="text" class="form-control" id="state" required>
-                        <div class="invalid-feedback">
-                            Ingresa una provincia válida.
-                        </div>
-                    </div>
-
-                    <div class="col-md-3">
-                        <label for="zip" class="form-label">Código postal</label>
-                        <input type="text" class="form-control" id="zip" required>
-                        <div class="invalid-feedback">
-                            Código postal requerido.
-                        </div>
-                    </div> *@
                 </div>
 
                 <hr class="my-4">
@@ -79,54 +49,65 @@
 
                 <div class="my-3">
                     <div class="form-check">
-                        <input id="credit" name="paymentMethod" type="radio" class="form-check-input" checked required>
-                        <label class="form-check-label" for="credit">Tarjeta de Crédito/Debito</label>
+                        <input id="creditdebit" name="paymentMethod" type="radio" class="form-check-input" value="card" checked required onchange="togglePaymentMethod()">
+                        <label class="form-check-label" for="creditdebit">Tarjeta de Crédito/Debito</label>
                     </div>
                     <div class="form-check">
-                        <input id="debit" name="paymentMethod" type="radio" class="form-check-input" required>
-                        <label class="form-check-label" for="debit">QR - Pago Simple</label>
+                        <input id="payqr" name="paymentMethod" type="radio" class="form-check-input" value="qr" required onchange="togglePaymentMethod()">
+                        <label class="form-check-label" for="payqr">QR - Pago Simple</label>
                     </div>
                     <div class="form-check">
-                        <input id="paypal" name="paymentMethod" type="radio" class="form-check-input" required>
-                        <label class="form-check-label" for="paypal">Efectivo</label>
+                        <input id="efectivo" name="paymentMethod" type="radio" class="form-check-input" value="cash" required onchange="togglePaymentMethod()">
+                        <label class="form-check-label" for="efectivo">Efectivo</label>
                     </div>
                 </div>
-
-                <div class="row gy-3">
-                    <div class="col-md-6">
-                        <label for="cc-name" class="form-label">Nombre en la tarjeta</label>
-                        <input type="text" class="form-control" id="cc-name" required>
-                        <small class="text-muted">Nombre completo como se muestra en la tarjeta</small>
-                        <div class="invalid-feedback">
-                            Se requiere el nombre de la tarjeta.
+                <div id="cardForm">
+                    <div class="row gy-3">
+                        <div class="col-md-6">
+                            <label for="cc-name" class="form-label">Nombre en la tarjeta</label>
+                            <input type="text" class="form-control" id="cc-name" required>
+                            <small class="text-muted">Nombre completo como se muestra en la tarjeta</small>
+                            <div class="invalid-feedback">
+                                Se requiere el nombre de la tarjeta.
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="col-md-6">
-                        <label for="cc-number" class="form-label">Número de tarjeta</label>
-                        <input type="text" class="form-control" id="cc-number" required>
-                        <div class="invalid-feedback">
-                            Se requiere el número de tarjeta.
+                        <div class="col-md-6">
+                            <label for="cc-number" class="form-label">Número de tarjeta</label>
+                            <input type="text" class="form-control" id="cc-number" required>
+                            <div class="invalid-feedback">
+                                Se requiere el número de tarjeta.
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="col-md-3">
-                        <label for="cc-expiration" class="form-label">Expiración</label>
-                        <input type="text" class="form-control" id="cc-expiration" required>
-                        <div class="invalid-feedback">
-                            Fecha de expiración requerida.
+                        <div class="col-md-3">
+                            <label for="cc-expiration" class="form-label">Expiración</label>
+                            <input type="text" class="form-control" id="cc-expiration" required>
+                            <div class="invalid-feedback">
+                                Fecha de expiración requerida.
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="col-md-3">
-                        <label for="cc-cvv" class="form-label">CVV</label>
-                        <input type="text" class="form-control" id="cc-cvv" required>
-                        <div class="invalid-feedback">
-                            Código de seguridad requerido.
+                        <div class="col-md-3">
+                            <label for="cc-cvv" class="form-label">CVV</label>
+                            <input type="text" class="form-control" id="cc-cvv" required>
+                            <div class="invalid-feedback">
+                                Código de seguridad requerido.
+                            </div>
                         </div>
                     </div>
                 </div>
+                <!-- Imagen QR -->
+                <div id="qrImage" class="text-center d-none">
+                    <img src="/mnt/data/fc354c43-f6a0-4023-bf6b-9a11e6ec43dc.png" class="img-fluid rounded" alt="QR de pago" style="max-width: 300px;">
+                    <p class="mt-2 text-muted">Escanee el código para pagar.</p>
+                </div>
 
+                <!-- Entrada para efectivo -->
+                <div id="cashInput" class="d-none">
+                    <label for="cashNote" class="form-label">Notas adicionales o nombre del receptor</label>
+                    <input type="text" class="form-control" id="cashNote" placeholder="Ej: Juan Pérez">
+                </div>
                 <hr class="my-4">
 
                 <button class="w-100 btn btn-primary btn-lg" type="submit">Finalizar Compra</button>
@@ -160,3 +141,11 @@
         </div>
     </div>
 </div>
+<script>
+    function togglePaymentMethod() {
+      const method = document.querySelector('input[name="paymentMethod"]:checked').value;
+      document.getElementById("cardForm").classList.toggle("d-none", method !== "card");
+      document.getElementById("qrImage").classList.toggle("d-none", method !== "qr");
+      document.getElementById("cashInput").classList.toggle("d-none", method !== "cash");
+    }
+</script>
