@@ -21,7 +21,7 @@
             @foreach (var item in CartService.GetCartItems())
             {
 
-                <li class="list-group-item">
+                @* <li class="list-group-item">
                     <div class="row g-3">
                         <!-- Imagen -->
                         <div class="col-sm d-flex align-items-stretch">
@@ -43,16 +43,23 @@
                             <button class="btn btn-outline-secondary btn-sm" @onclick="() => Decrementar(item)">➖ Quitar</button>
                             <button class="btn btn-outline-danger btn-sm" @onclick="() => Eliminar(item)">🗑 Eliminar</button>
                         </div>
-                    </div>
-                </li>
+                    </div> 
+                </li>*@
 
 
 
-                @* <li class="list-group-item">
-                    <div class="d-flex align-items-stretch">
-                     
-                        <img src="@item.ProductItem.Imagen" alt="Imagen del producto" width="200" height="150" class="me-3 rounded border" />
-                        <div class="flex-grow-1 d-flex flex-column justify-content-between">
+                <li class="list-group-item border-bottom p-3">
+                    <div class="d-flex flex-column flex-md-row align-items-stretch">
+
+                        <!-- Imagen -->
+                        <div class="text-center me-md-3 mb-3 mb-md-0">
+                            <img src="@item.ProductItem.Imagen" alt="Imagen del producto"
+                                 class="img-fluid rounded border"
+                                 style="max-width: 100%; height: auto; max-height: 180px;" />
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="flex-grow-1 d-flex flex-column justify-content-between mb-3 mb-md-0">
                             <h5>@item.Name</h5>
                             <p class="mb-1">@item.ProductItem.Descripcion</p>
                             <p class="mb-1"><strong>ID:</strong> @item.ProductItem.Id</p>
@@ -60,13 +67,15 @@
                             <p class="mb-1"><strong>Cantidad:</strong> @item.Quantity</p>
                         </div>
 
-                        <div class="d-flex flex-column align-items-end justify-content-center gap-1">
-                            <button class="btn btn-outline-primary btn-sm me-1" @onclick="() => Incrementar(item)">➕ Agregar</button>
-                            <button class="btn btn-outline-secondary btn-sm me-1" @onclick="() => Decrementar(item)">➖ Quitar</button>
+                        <!-- Botones -->
+                        <div class="d-flex flex-md-column justify-content-center align-items-center gap-2">
+                            <button class="btn btn-outline-primary btn-sm" @onclick="() => Incrementar(item)">➕ Agregar</button>
+                            <button class="btn btn-outline-secondary btn-sm" @onclick="() => Decrementar(item)">➖ Quitar</button>
                             <button class="btn btn-outline-danger btn-sm" @onclick="() => Eliminar(item)">🗑 Eliminar</button>
                         </div>
                     </div>
-                </li> *@
+                </li>
+
             }
 
             <li class="list-group-item">
