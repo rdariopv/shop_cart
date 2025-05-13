@@ -24,12 +24,12 @@
                 <li class="list-group-item">
                     <div class="row g-3">
                         <!-- Imagen -->
-                        <div class="col-sm">
+                        <div class="col-sm d-flex align-items-stretch">
                             <img src="@item.ProductItem.Imagen" alt="Imagen del producto" class="img-fluid rounded border" style="max-height: 180px;" />
                         </div>
 
                         <!-- Descripción -->
-                        <div class="col-sm mt-2">
+                        <div class="col-sm mt-2  flex-grow-1 d-flex flex-column justify-content-between">
                             <h5>@item.Name</h5>
                             <p class="mb-1">@item.ProductItem.Descripcion</p>
                             <p class="mb-1"><strong>ID:</strong> @item.ProductItem.Id</p>
@@ -38,7 +38,7 @@
                         </div>
 
                         <!-- Botones -->
-                        <div class="col-sm d-flex justify-content-center gap-2 mt-2">
+                        <div class="col-sm d-flex flex-column align-items-end justify-content-center gap-1">
                             <button class="btn btn-outline-primary btn-sm" @onclick="() => Incrementar(item)">➕ Agregar</button>
                             <button class="btn btn-outline-secondary btn-sm" @onclick="() => Decrementar(item)">➖ Quitar</button>
                             <button class="btn btn-outline-danger btn-sm" @onclick="() => Eliminar(item)">🗑 Eliminar</button>
