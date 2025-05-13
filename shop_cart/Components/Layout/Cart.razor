@@ -20,9 +20,37 @@
         <ul class="list-group mb-4">
             @foreach (var item in CartService.GetCartItems())
             {
+
                 <li class="list-group-item">
+                    <div class="row">
+                        <!-- Imagen -->
+                        <div class="col-12 text-center">
+                            <img src="@item.ProductItem.Imagen" alt="Imagen del producto" class="img-fluid rounded border" style="max-height: 180px;" />
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="col-12 mt-2">
+                            <h5>@item.Name</h5>
+                            <p class="mb-1">@item.ProductItem.Descripcion</p>
+                            <p class="mb-1"><strong>ID:</strong> @item.ProductItem.Id</p>
+                            <p class="mb-1"><strong>Precio:</strong> $@item.Price</p>
+                            <p class="mb-1"><strong>Cantidad:</strong> @item.Quantity</p>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="col-12 d-flex justify-content-center gap-2 mt-2">
+                            <button class="btn btn-outline-primary btn-sm" @onclick="() => Incrementar(item)">➕ Agregar</button>
+                            <button class="btn btn-outline-secondary btn-sm" @onclick="() => Decrementar(item)">➖ Quitar</button>
+                            <button class="btn btn-outline-danger btn-sm" @onclick="() => Eliminar(item)">🗑 Eliminar</button>
+                        </div>
+                    </div>
+                </li>
+
+
+
+                @* <li class="list-group-item">
                     <div class="d-flex align-items-stretch">
-                      @*   <img src="@item.ProductItem.Imagen" alt="Imagen del producto" width="100" height="100" class="card-img-top img-fluid me-3 rounded border" /> *@
+                     
                         <img src="@item.ProductItem.Imagen" alt="Imagen del producto" width="200" height="150" class="me-3 rounded border" />
                         <div class="flex-grow-1 d-flex flex-column justify-content-between">
                             <h5>@item.Name</h5>
@@ -38,7 +66,7 @@
                             <button class="btn btn-outline-danger btn-sm" @onclick="() => Eliminar(item)">🗑 Eliminar</button>
                         </div>
                     </div>
-                </li>
+                </li> *@
             }
 
             <li class="list-group-item">
