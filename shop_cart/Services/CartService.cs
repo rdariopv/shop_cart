@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System;
 using shop_cart.Models;
+using QRCoder;
 namespace shop_cart.Services
 {
     
@@ -53,6 +54,15 @@ namespace shop_cart.Services
             return items.Sum(i => i.Quantity);
         }
         private void NotifyStateChanged() => OnChange?.Invoke();
+
+        public string GenerateQrAsBase64(string content)
+        {
+            using var qrGenerator = new QRCodeGenerator();
+            using var qrCodeData = qrGenerator.CreateQrCode(content, QRCodeGenerator.ECCLevel.Q);
+            using var qrCode = new PngByteQRCode(qrCodeData);
+            var qrBytes = qrCode.GetGraphic(20);
+            return "data:image/png;base64," + Convert.ToBase64String(qrBytes);
+        }
     }
 
 }

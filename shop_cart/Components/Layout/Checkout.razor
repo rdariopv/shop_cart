@@ -12,6 +12,29 @@
 
     <hr class="my-4">
     <div class="row g-5">
+        <!-- Resumen del carrito -->
+        <div class="col-md-5 col-lg-4 order-md-last">
+            <h4 class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-primary">Tu carrito</span>
+                <span class="badge bg-primary rounded-pill">@CartService.GetCartCount()</span>
+            </h4>
+            <ul class="list-group mb-3">
+                @foreach (var item in CartService.GetCartItems())
+                {
+                    <li class="list-group-item d-flex justify-content-between lh-sm">
+                        <div>
+                            <h6 class="my-0">@item.Name x @item.Quantity</h6>
+                            <small class="text-muted">ID: @item.ProductItem.Id</small>
+                        </div>
+                        <span class="text-muted">$@((item.Price * item.Quantity).ToString("F2"))</span>
+                    </li>
+                }
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>Total</span>
+                    <strong>$@CartService.GetCartItems().Sum(i => i.Price * i.Quantity).ToString("F2")</strong>
+                </li>
+            </ul>
+        </div>
         <!-- Formulario -->
         <div class="col-md-7 col-lg-8">
             <form class="needs-validation" novalidate>
@@ -49,19 +72,20 @@
 
                 <div class="my-3">
                     <div class="form-check">
-                        <input id="creditdebit" name="paymentMethod" type="radio" class="form-check-input" value="card" checked required onchange="togglePaymentMethod()">
+                        <input id="creditdebit" name="paymentMethod" type="radio" class="form-check-input" value="card" checked @onchange="HandlePaymentMethodChange" required>
                         <label class="form-check-label" for="creditdebit">Tarjeta de Crédito/Debito</label>
                     </div>
                     <div class="form-check">
-                        <input id="payqr" name="paymentMethod" type="radio" class="form-check-input" value="qr" required onchange="togglePaymentMethod()">
+                       <input id="payqr" name="paymentMethod" type="radio" class="form-check-input" value="qr" @onchange="HandlePaymentMethodChange" required >
+
                         <label class="form-check-label" for="payqr">QR - Pago Simple</label>
                     </div>
                     <div class="form-check">
-                        <input id="efectivo" name="paymentMethod" type="radio" class="form-check-input" value="cash" required onchange="togglePaymentMethod()">
+                        <input id="efectivo" name="paymentMethod" type="radio" class="form-check-input" value="cash" @onchange="HandlePaymentMethodChange" required>
                         <label class="form-check-label" for="efectivo">Efectivo</label>
                     </div>
                 </div>
-                <div id="cardForm">
+                <div id="cardForm" class="@((selectedPaymentMethod == "card" ? "" : "d-none"))">
                     <div class="row gy-3">
                         <div class="col-md-6">
                             <label for="cc-name" class="form-label">Nombre en la tarjeta</label>
@@ -98,13 +122,20 @@
                     </div>
                 </div>
                 <!-- Imagen QR -->
-                <div id="qrImage" class="text-center d-none">
+                @* <div id="qrImage" class="text-center d-none">
                     <img src="/mnt/data/fc354c43-f6a0-4023-bf6b-9a11e6ec43dc.png" class="img-fluid rounded" alt="QR de pago" style="max-width: 300px;">
                     <p class="mt-2 text-muted">Escanee el código para pagar.</p>
+                </div> *@
+                <div id="qrImage" class="text-center @(selectedPaymentMethod == "qr" ? "" : "d-none")">
+                    @if (!string.IsNullOrEmpty(QrImageBase64))
+                    {
+                        <img src="@QrImageBase64" class="img-fluid rounded" alt="QR de pago" style="max-width: 300px;" />
+                        <p class="mt-2 text-muted">Escanee el código para pagar.</p>
+                    }
                 </div>
 
                 <!-- Entrada para efectivo -->
-                <div id="cashInput" class="d-none">
+                <div id="cashInput" class="@(selectedPaymentMethod == "cash" ? "" : "d-none")">
                     <label for="cashNote" class="form-label">Notas adicionales o nombre del receptor</label>
                     <input type="text" class="form-control" id="cashNote" placeholder="Ej: Juan Pérez">
                 </div>
@@ -116,29 +147,7 @@
             </form>
         </div>
 
-        <!-- Resumen del carrito -->
-        <div class="col-md-5 col-lg-4 order-md-last">
-            <h4 class="d-flex justify-content-between align-items-center mb-3">
-                <span class="text-primary">Tu carrito</span>
-                <span class="badge bg-primary rounded-pill">@CartService.GetCartCount()</span>
-            </h4>
-            <ul class="list-group mb-3">
-                @foreach (var item in CartService.GetCartItems())
-                {
-                    <li class="list-group-item d-flex justify-content-between lh-sm">
-                        <div>
-                            <h6 class="my-0">@item.Name x @item.Quantity</h6>
-                            <small class="text-muted">ID: @item.ProductItem.Id</small>
-                        </div>
-                        <span class="text-muted">$@((item.Price * item.Quantity).ToString("F2"))</span>
-                    </li>
-                }
-                <li class="list-group-item d-flex justify-content-between">
-                    <span>Total</span>
-                    <strong>$@CartService.GetCartItems().Sum(i => i.Price * i.Quantity).ToString("F2")</strong>
-                </li>
-            </ul>
-        </div>
+       
     </div>
 </div>
 <script>
@@ -149,3 +158,24 @@
       document.getElementById("cashInput").classList.toggle("d-none", method !== "cash");
     }
 </script>
+@code{
+    private string? selectedPaymentMethod = "card"; // Valor por defecto
+    private string? QrImageBase64;
+
+
+    private void HandlePaymentMethodChange(ChangeEventArgs e)
+    {
+        selectedPaymentMethod = e.Value?.ToString();
+
+        if (selectedPaymentMethod == "qr")
+        {
+            var total = CartService.GetCartItems().Sum(i => i.Price * i.Quantity);
+            var qrContent = $"Pago total: ${total:F2}";
+            QrImageBase64 = CartService.GenerateQrAsBase64(qrContent);
+        }
+        else
+        {
+            QrImageBase64 = null;
+        }
+    }
+}
