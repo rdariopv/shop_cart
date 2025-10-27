@@ -12,9 +12,17 @@ namespace shop_cart.Services
         private List<CartItem> items = new List<CartItem>();
         public event Action OnChange;
 
+        private readonly HttpClient _httpClient;
+        private List<Product> availableProducts = new List<Product>();
+
         public int CarritoCantidad { get; private set; } = 0;
 
-       
+        public CartService(HttpClient httpClient)
+        {
+            _httpClient = httpClient;
+        }
+
+
         public void AgregarProducto(Product producto, int cantidad)
         {
             var existingItem = items.FirstOrDefault(i => i.ProductItem.Id  == producto.Id  );
@@ -62,6 +70,14 @@ namespace shop_cart.Services
             using var qrCode = new PngByteQRCode(qrCodeData);
             var qrBytes = qrCode.GetGraphic(20);
             return "data:image/png;base64," + Convert.ToBase64String(qrBytes);
+        }
+
+        // 🔹 Nuevo método para obtener productos desde la API
+        public async Task<List<Product>> FetchProductsAsync()
+        {
+            availableProducts = await _httpClient.GetFromJsonAsync<List<Product>>("api/products")
+                               ?? new List<Product>();
+            return availableProducts;
         }
     }
 
