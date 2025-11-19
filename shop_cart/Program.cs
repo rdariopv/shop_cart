@@ -4,7 +4,8 @@ using shop_cart.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddScoped<CartService>();
+//builder.Services.AddScoped<CartService>();
+builder.Services.AddHttpClient<CartService>();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 

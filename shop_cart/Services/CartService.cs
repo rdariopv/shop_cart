@@ -75,9 +75,16 @@ namespace shop_cart.Services
         // 🔹 Nuevo método para obtener productos desde la API
         public async Task<List<Product>> FetchProductsAsync()
         {
-            availableProducts = await _httpClient.GetFromJsonAsync<List<Product>>("api/products")
-                               ?? new List<Product>();
-            return availableProducts;
+            try
+            {
+                availableProducts = await _httpClient.GetFromJsonAsync<List<Product>>("api/product") ?? new();
+                return availableProducts;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error al obtener productos: {ex.Message}");
+                return new List<Product>();
+            }
         }
     }
 
