@@ -1,8 +1,10 @@
 ﻿@using shop_cart.Services
 @implements IDisposable
 @inject CartService CartService
-@rendermode InteractiveServer
+ @rendermode InteractiveServer 
 @inject NavigationManager Navigation
+
+
 
 <div class="container-fluid">
     <div class="row">
@@ -37,6 +39,7 @@
                         <i class="bi bi-cart"></i>
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                             @CartService.CarritoCantidad
+                           @*  @(CartService.CarritoCantidad > 0 ? CartService.CarritoCantidad : "") *@
                         </span>
                     </button>
 
@@ -54,8 +57,20 @@
     {
        CartService.OnChange += StateHasChanged;
         StateHasChanged(); // <-- Forzamos un primer render
-        
     }
+
+   private bool _cartLoaded = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_cartLoaded)
+        {
+            _cartLoaded = true;
+            await CartService.LoadCartAsync();
+            StateHasChanged();
+        }
+    }
+   
       
     public void Dispose()
     {
@@ -63,7 +78,8 @@
     }
     private void IrAlCarrito()
     {
-        Navigation.NavigateTo("/cart", forceLoad: true);
+       Navigation.NavigateTo("/cart", forceLoad: true);
+      //  Navigation.NavigateTo("/cart");
     }
     private void ToggleSidebar()
     {
