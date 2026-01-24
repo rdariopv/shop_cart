@@ -161,7 +161,27 @@
 @code{
     private string? selectedPaymentMethod = "card"; // Valor por defecto
     private string? QrImageBase64;
+    private bool _initialized;
 
+    protected override void OnInitialized()
+    {
+        CartService.OnChange += StateHasChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_initialized)
+        {
+            _initialized = true;
+            await CartService.InitializeAsync();
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        CartService.OnChange -= StateHasChanged;
+    }
 
     private void HandlePaymentMethodChange(ChangeEventArgs e)
     {
@@ -178,4 +198,11 @@
             QrImageBase64 = null;
         }
     }
+
+    async Task FinalizarCompra()
+    {
+        await CartService.ClearAsync();
+        Navigation.NavigateTo("/");
+    }
+
 }

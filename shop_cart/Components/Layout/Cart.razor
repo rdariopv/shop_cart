@@ -1,6 +1,7 @@
 ﻿@using shop_cart.Models
 @using shop_cart.Services
-@rendermode InteractiveServer
+@implements IDisposable
+ @rendermode InteractiveServer 
 @inject NavigationManager Navigation
  @inject CartService CartService
  @page "/cart"
@@ -54,8 +55,8 @@
                         <!-- Imagen -->
                         <div class="text-center me-md-3 mb-3 mb-md-0">
                             <img src="@item.ProductItem.Imagen" alt="Imagen del producto"
-                                 class="img-fluid rounded border"
-                                 style="width: 180px; height: 120px; object-fit: cover;" />
+                            class="img-fluid rounded border"
+                            style="width: 180px; height: 120px; object-fit: cover;" />
                         </div>
 
                         <!-- Descripción -->
@@ -80,7 +81,7 @@
 
             <li class="list-group-item">
                 <div class="d-flex justify-content-end align-items-center gap-4">
-                        <h4 class="mb-0">Total: <span class="text-success">$@CalcularTotal().ToString("F2")</span></h4>
+                    <h4 class="mb-0">Total: <span class="text-success">$@CalcularTotal().ToString("F2")</span></h4>
                     <button class="btn btn-success" @onclick="IrAlCheckout">Proceder al pago</button>
                 </div>
             </li>
@@ -88,53 +89,57 @@
         </ul>
 
         <div class="container mt-4">
-           
+
         </div>
     }
 </div>
 
 @code {
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await CartService.InitializeAsync();
+            StateHasChanged();
+        }
+    }
+
+    protected override void  OnInitialized()
+    {
+        CartService.OnChange += StateHasChanged;
+      
+    }
+    public void Dispose()
+    {
+        CartService.OnChange -= StateHasChanged;
+    }
+
     void IrAlCheckout()
     {
-        Navigation.NavigateTo("/checkout", forceLoad: true);
-    }
-    private void Incrementar(CartItem item)
-    {
-        item.Quantity++;
+        Navigation.NavigateTo("/checkout",true);
     }
 
-    private void Decrementar(CartItem item)
+    async Task Incrementar(CartItem item)
     {
-        if (item.Quantity > 1)
-            item.Quantity--;
-        else
-            CartService.RemoveItem(item);
+        await CartService.IncrementarAsync(item);
+    }
+    
+
+    async Task Decrementar(CartItem item)
+    {
+        await CartService.DecrementarAsync(item);
     }
 
-    private void Eliminar(CartItem item)
+    async Task Eliminar(CartItem item)
     {
-        CartService.RemoveItem(item);
+        await CartService.RemoveItemAsync(item);
     }
 
-    private decimal CalcularTotal()
+    decimal CalcularTotal()
     {
-        return CartService.GetCartItems().Sum(i => i.Price * i.Quantity);
+        return CartService.GetCartItems()
+            .Sum(i => i.Price * i.Quantity);
     }
 }
 
-@* 
-<h3>Cart Details</h3>
-
-@if (CartService.GetCartItems().Count == 0)
-{
-    <p>Tu carrito está vacío.</p>
-}
-else
-{
-    <ul>
-        @foreach (var item in CartService.GetCartItems())
-        {
-            <li>@item.Name - Cantidad: @item.Quantity - Precio: @item.Price.ToString("C")</li>
-        }
-    </ul>
-} *@

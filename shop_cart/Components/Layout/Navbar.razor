@@ -56,21 +56,19 @@
     protected override void OnInitialized()
     {
        CartService.OnChange += StateHasChanged;
-        StateHasChanged(); // <-- Forzamos un primer render
+      
     }
 
    private bool _cartLoaded = false;
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && !_cartLoaded)
+        if (firstRender)
         {
-            _cartLoaded = true;
-            await CartService.LoadCartAsync();
-            StateHasChanged();
+            await CartService.InitializeAsync(); // 🔥 SOLO AQUÍ
+            StateHasChanged(); // <-- Forzamos un primer render
         }
     }
-   
+
       
     public void Dispose()
     {

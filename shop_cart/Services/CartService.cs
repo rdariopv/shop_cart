@@ -11,24 +11,17 @@ namespace shop_cart.Services
     public class CartService
     {
         private const string CART_KEY = "shopping_cart";
+        private bool _initialized=false;
 
         private readonly ILocalStorageService _localStorage;
-
         private List<CartItem> items = new List<CartItem>();
-        public event Action OnChange;
 
-        private readonly HttpClient _httpClient;
-        private List<Product> availableProducts = new List<Product>();
+        public event Action? OnChange;
 
-        public int CarritoCantidad { get; private set; } = 0;
-
-        private bool _initialized;
-
-
+        public int CarritoCantidad => items.Sum(x => x.Quantity);
 
         public CartService(ILocalStorageService arg_localStorage)
         {
-            //_httpClient = httpClient;
             _localStorage = arg_localStorage;
         }
 
@@ -36,10 +29,18 @@ namespace shop_cart.Services
         public async Task InitializeAsync()
         {
             if (_initialized) return;
-            items = await _localStorage.GetItemAsync<List<CartItem>>(CART_KEY)
-                    ?? new List<CartItem>();
+            //items = await _localStorage.GetItemAsync<List<CartItem>>(CART_KEY)
+            //        ?? new List<CartItem>();
 
-            UpdateCount();
+
+
+            var stored = await _localStorage.GetItemAsync<List<CartItem>>(CART_KEY);
+            if (stored != null)
+            {
+                items.Clear();
+                items.AddRange(stored);
+            }
+
             _initialized = true;
             NotifyStateChanged();
         }
@@ -63,28 +64,23 @@ namespace shop_cart.Services
                     Quantity = cantidad
                 });
             }
-            CarritoCantidad= items.Sum(i => i.Quantity);
+            
             Console.WriteLine($"Carrito ahora tiene {CarritoCantidad} items");
-            await SaveCartAsync();
-            NotifyStateChanged();
+            await PersistAsync();
         }
-        public async Task RemoveItem(CartItem item)
-        {
-            items.Remove(item);
-            CarritoCantidad = items.Sum(i => i.Quantity);
-            NotifyStateChanged();
-        }
-        public List<CartItem> GetCartItems()
-        {
-            return items;
-        }
-
-        //public int GetCartCount()
-        //{
-        //    return items.Sum(i => i.Quantity);
-        //}
+       
+        public IReadOnlyList<CartItem> GetCartItems() => items.AsReadOnly();
+      
         public int GetCartCount() => CarritoCantidad;
         private void NotifyStateChanged() => OnChange?.Invoke();
+
+
+        // 🔹 Guardar + notificar (punto único)
+        private async Task PersistAsync()
+        {
+            await _localStorage.SetItemAsync(CART_KEY, items);
+            NotifyStateChanged();
+        }
 
         public string GenerateQrAsBase64(string content)
         {
@@ -95,36 +91,36 @@ namespace shop_cart.Services
             return "data:image/png;base64," + Convert.ToBase64String(qrBytes);
         }
 
-        private void UpdateCount()
+       
+        public async Task IncrementarAsync(CartItem item)
         {
-            CarritoCantidad = items.Sum(i => i.Quantity);
+            var existing = items.FirstOrDefault(x => x.ProductItem.Id == item.ProductItem.Id);
+            if (existing == null) return;
+
+            existing.Quantity++;
+            await PersistAsync();
         }
-
-        // 🔹 Nuevo método para obtener productos desde la API
-        public async Task<List<Product>> FetchProductsAsync()
+        public async Task DecrementarAsync(CartItem item)
         {
-            try
-            {
-                availableProducts = await _httpClient.GetFromJsonAsync<List<Product>>("api/product") ?? new();
-                return availableProducts;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"❌ Error al obtener productos: {ex.Message}");
-                return new List<Product>();
-            }
+            var existing = items.FirstOrDefault(x => x.ProductItem.Id == item.ProductItem.Id);
+            if (existing == null) return;
+
+            if (existing.Quantity > 1)
+                existing.Quantity--;
+            else
+                items.Remove(existing);
+
+            await PersistAsync();
         }
-
-        private async Task SaveCartAsync()
+        public async Task RemoveItemAsync(CartItem item)
         {
-            await _localStorage.SetItemAsync(CART_KEY, items);
+            items.Remove(item);
+            await PersistAsync();
         }
-
-        public async Task LoadCartAsync()
+        public async Task ClearAsync()
         {
-            items = await _localStorage.GetItemAsync<List<CartItem>>(CART_KEY)
-                    ?? new List<CartItem>();
-
+            items.Clear();
+            await _localStorage.RemoveItemAsync(CART_KEY);
             NotifyStateChanged();
         }
 
