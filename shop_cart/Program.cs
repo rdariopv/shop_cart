@@ -1,22 +1,25 @@
 using Blazored.LocalStorage;
-using shop_cart.Components;
 using shop_cart.Services;
+using shop_cart;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-//builder.Services.AddHttpClient();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<CartService>();
-//builder.Services.AddSingleton <CartService>();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddHttpClient<ProductService>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7179/");
+});
 
 
 //builder.WebHost.UseUrls("http://*:80");
 
 var app = builder.Build();
-app.MapRazorComponents<App>()
+app.MapRazorComponents<shop_cart.Components.App>()
     .AddInteractiveServerRenderMode(); // ? Este también
 
 // Configure the HTTP request pipeline.

@@ -33,7 +33,7 @@
 
 
 
-    private void AgregarAlCarrito()
+    private async Task   AgregarAlCarrito()
     {
         //Console.WriteLine($"Agregado: {Producto.Nombre}, Cantidad: {Cantidad}");
         // Aquí iría la lógica para agregar al carrito
@@ -43,6 +43,6 @@
         product.Nombre  = Title;
         product.Precio  = Price;
         product.Descripcion  = Description;
-        CartService.AgregarProducto(product, 1);
+       await CartService.AgregarProducto(product, 1);
     }
 }

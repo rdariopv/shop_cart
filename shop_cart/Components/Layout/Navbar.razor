@@ -38,8 +38,8 @@
                     <button class="btn btn-outline-primary position-relative" @onclick="IrAlCarrito" >
                         <i class="bi bi-cart"></i>
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                            @CartService.CarritoCantidad
-                           @*  @(CartService.CarritoCantidad > 0 ? CartService.CarritoCantidad : "") *@
+                            @* @CartService.CarritoCantidad *@
+                             @(CartService.CarritoCantidad > 0 ? CartService.CarritoCantidad.ToString() : "0") 
                         </span>
                     </button>
 
@@ -52,14 +52,15 @@
 @code {
     
    // private string mensaje = "Esperando...";
-
+    private Action? _cartChanged;
     protected override void OnInitialized()
     {
-       CartService.OnChange += StateHasChanged;
-      
+        
+        _cartChanged = () => InvokeAsync(StateHasChanged);
+        CartService.OnChange += _cartChanged;
     }
 
-   private bool _cartLoaded = false;
+   // private bool _cartLoaded = false;
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -72,12 +73,15 @@
       
     public void Dispose()
     {
-        CartService.OnChange -= StateHasChanged;
+        if (_cartChanged != null)
+            CartService.OnChange -= _cartChanged;
+        
     }
     private void IrAlCarrito()
     {
-       Navigation.NavigateTo("/cart", forceLoad: true);
-      //  Navigation.NavigateTo("/cart");
+      // Navigation.NavigateTo("/cart", forceLoad: true);
+        Navigation.NavigateTo("/cart");
+     
     }
     private void ToggleSidebar()
     {

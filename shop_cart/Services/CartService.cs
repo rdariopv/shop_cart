@@ -20,6 +20,9 @@ namespace shop_cart.Services
 
         public int CarritoCantidad => items.Sum(x => x.Quantity);
 
+        private readonly SemaphoreSlim _lock = new(1, 1);
+
+        public IReadOnlyList<CartItem> GetCartItems() => items.AsReadOnly();
         public CartService(ILocalStorageService arg_localStorage)
         {
             _localStorage = arg_localStorage;
@@ -29,24 +32,40 @@ namespace shop_cart.Services
         public async Task InitializeAsync()
         {
             if (_initialized) return;
-            //items = await _localStorage.GetItemAsync<List<CartItem>>(CART_KEY)
-            //        ?? new List<CartItem>();
+            
+            await _lock.WaitAsync();
 
+            try {
+                if (_initialized)
+                    return;
 
+                var stored = await _localStorage.GetItemAsync<List<CartItem>>(CART_KEY);
+                if (stored != null)
+                {
+                    items = stored;
+                    //items.Clear();
+                    //items.AddRange(stored);
+                }
 
-            var stored = await _localStorage.GetItemAsync<List<CartItem>>(CART_KEY);
-            if (stored != null)
-            {
-                items.Clear();
-                items.AddRange(stored);
+                _initialized = true;
+
             }
-
-            _initialized = true;
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Cart initialization error: {ex.Message}");
+            }
+            finally { 
+                _lock.Release(); 
+            }
             NotifyStateChanged();
         }
-        //public void AgregarProducto(Product producto, int cantidad)
+ 
         public async Task AgregarProducto(Product producto, int cantidad)
         {
+            //if (_initialized) await InitializeAsync();
+
+            await InitializeAsync();
+
             var existingItem = items.FirstOrDefault(i => i.ProductItem.Id  == producto.Id  );
             //CarritoCantidad += cantidad;
 
@@ -69,7 +88,7 @@ namespace shop_cart.Services
             await PersistAsync();
         }
        
-        public IReadOnlyList<CartItem> GetCartItems() => items.AsReadOnly();
+      
       
         public int GetCartCount() => CarritoCantidad;
         private void NotifyStateChanged() => OnChange?.Invoke();
@@ -78,7 +97,15 @@ namespace shop_cart.Services
         // 🔹 Guardar + notificar (punto único)
         private async Task PersistAsync()
         {
-            await _localStorage.SetItemAsync(CART_KEY, items);
+            try
+            {
+                await _localStorage.SetItemAsync(CART_KEY, items);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving cart: {ex.Message}");
+            }
+
             NotifyStateChanged();
         }
 
@@ -94,6 +121,7 @@ namespace shop_cart.Services
        
         public async Task IncrementarAsync(CartItem item)
         {
+            await InitializeAsync();
             var existing = items.FirstOrDefault(x => x.ProductItem.Id == item.ProductItem.Id);
             if (existing == null) return;
 
@@ -102,6 +130,8 @@ namespace shop_cart.Services
         }
         public async Task DecrementarAsync(CartItem item)
         {
+            await InitializeAsync();
+
             var existing = items.FirstOrDefault(x => x.ProductItem.Id == item.ProductItem.Id);
             if (existing == null) return;
 
@@ -114,6 +144,7 @@ namespace shop_cart.Services
         }
         public async Task RemoveItemAsync(CartItem item)
         {
+            await InitializeAsync();
             items.Remove(item);
             await PersistAsync();
         }

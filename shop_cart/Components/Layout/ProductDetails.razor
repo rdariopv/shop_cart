@@ -2,6 +2,7 @@
 @using shop_cart.Services
 @rendermode InteractiveServer
 @inject CartService CartService
+@inject ProductService ProductService
 
 
 @page "/producto/{Id}"
@@ -61,25 +62,35 @@
      private List<string> Imagenes = new();
     private int Cantidad = 1;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine("Página ProductDetails inicializada correctamente");
-        // Simulación de producto cargado
-        Producto = new Product
-            {
-                Id = Id,
-                Nombre = "Producto de Ejemplo",
-                Descripcion = "Descripción del producto...",
-                Precio = 99.99M
-            };
+        Producto = await ProductService.GetByIdAsync(Convert.ToInt32( Id)) ?? new Product();
 
-        Imagenes = new List<string>
-        {
-            $"images/product1.jpg",
-            $"images/product2.jpg",
-            $"images/product3.jpg"
-        };
+        var imagenIds = await ProductService.GetProductListImagesAsync(Id);
+
+        Imagenes = imagenIds
+            .Select(id => $"https://localhost:7179/api/products/image/{id}")
+            .ToList();
     }
+    // protected override void OnInitialized()
+    // {
+    //     Console.WriteLine("Página ProductDetails inicializada correctamente");
+    //     // Simulación de producto cargado
+    //     Producto = new Product
+    //         {
+    //             Id = Id,
+    //             Nombre = "Producto de Ejemplo",
+    //             Descripcion = "Descripción del producto...",
+    //             Precio = 99.99M
+    //         };
+
+    //     Imagenes = new List<string>
+    //     {
+    //         $"images/product1.jpg",
+    //         $"images/product2.jpg",
+    //         $"images/product3.jpg"
+    //     };
+    // }
 
     private async void AgregarAlCarrito()
     {
