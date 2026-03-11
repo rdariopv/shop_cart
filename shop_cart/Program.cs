@@ -6,6 +6,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddBlazoredLocalStorage();
+builder.Services.AddScoped<CartState>();
+builder.Services.AddScoped<CartStorage>();
 builder.Services.AddScoped<CartService>();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();

@@ -10,7 +10,7 @@
 <div class="container mt-4">
     <h2>🛒 Tu Carrito</h2>
 
-    @if (CartService.GetCartItems().Count == 0)
+    @if (CartService.Items.Count == 0)
     {
         <div class="alert alert-info mt-4">
             El carrito está vacío. Agrega productos para verlos aquí.
@@ -19,7 +19,7 @@
     else
     {
         <ul class="list-group mb-4">
-            @foreach (var item in CartService.GetCartItems())
+            @foreach (var item in CartService.Items)
             {
 
                 @* <li class="list-group-item">
@@ -122,13 +122,14 @@
 
     async Task Incrementar(CartItem item)
     {
-        await CartService.IncrementarAsync(item);
+        await CartService.AddProduct(item.ProductItem,1);
     }
     
 
     async Task Decrementar(CartItem item)
     {
-        await CartService.DecrementarAsync(item);
+       // await CartService.DecrementarAsync(item);
+        await CartService.DecrementAsync(item);
     }
 
     async Task Eliminar(CartItem item)
@@ -138,7 +139,7 @@
 
     decimal CalcularTotal()
     {
-        return CartService.GetCartItems()
+        return CartService.Items
             .Sum(i => i.Price * i.Quantity);
     }
 }

@@ -39,7 +39,7 @@
                         <i class="bi bi-cart"></i>
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                             @* @CartService.CarritoCantidad *@
-                             @(CartService.CarritoCantidad > 0 ? CartService.CarritoCantidad.ToString() : "0") 
+                            @(CartService.Count > 0 ? CartService.Count.ToString() : "0")
                         </span>
                     </button>
 
@@ -55,9 +55,9 @@
     private Action? _cartChanged;
     protected override void OnInitialized()
     {
-        
-        _cartChanged = () => InvokeAsync(StateHasChanged);
-        CartService.OnChange += _cartChanged;
+        CartService.OnChange += () => InvokeAsync(StateHasChanged);
+        // _cartChanged = () => InvokeAsync(StateHasChanged);
+        // CartService.OnChange += _cartChanged;
     }
 
    // private bool _cartLoaded = false;
@@ -79,8 +79,8 @@
     }
     private void IrAlCarrito()
     {
-      // Navigation.NavigateTo("/cart", forceLoad: true);
-        Navigation.NavigateTo("/cart");
+       Navigation.NavigateTo("/cart", forceLoad: true);
+        //Navigation.NavigateTo("/cart");
      
     }
     private void ToggleSidebar()

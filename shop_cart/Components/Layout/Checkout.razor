@@ -19,7 +19,7 @@
                 <span class="badge bg-primary rounded-pill">@CartService.GetCartCount()</span>
             </h4>
             <ul class="list-group mb-3">
-                @foreach (var item in CartService.GetCartItems())
+                @foreach (var item in CartService.Items)
                 {
                     <li class="list-group-item d-flex justify-content-between lh-sm">
                         <div>
@@ -31,7 +31,7 @@
                 }
                 <li class="list-group-item d-flex justify-content-between">
                     <span>Total</span>
-                    <strong>$@CartService.GetCartItems().Sum(i => i.Price * i.Quantity).ToString("F2")</strong>
+                    <strong>$@CartService.Items.Sum(i => i.Price * i.Quantity).ToString("F2")</strong>
                 </li>
             </ul>
         </div>
@@ -189,7 +189,7 @@
 
         if (selectedPaymentMethod == "qr")
         {
-            var total = CartService.GetCartItems().Sum(i => i.Price * i.Quantity);
+            var total = CartService.Items.Sum(i => i.Price * i.Quantity);
             var qrContent = $"Pago total: ${total:F2}";
             QrImageBase64 = CartService.GenerateQrAsBase64(qrContent);
         }

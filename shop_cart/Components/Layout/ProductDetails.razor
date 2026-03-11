@@ -96,7 +96,7 @@
     {
         Console.WriteLine($"Agregado: {Producto.Nombre}, Cantidad: {Cantidad}");
         // Aquí iría la lógica para agregar al carrito
-       await CartService.AgregarProducto(Producto,Cantidad);
+       await CartService.AddProduct(Producto,Cantidad);
     }
     private async Task TestBoton()
     {
