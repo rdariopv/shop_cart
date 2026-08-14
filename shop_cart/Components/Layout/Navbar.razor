@@ -1,46 +1,79 @@
 ﻿@using shop_cart.Services
 @implements IDisposable
 @inject CartService CartService
- @rendermode InteractiveServer 
 @inject NavigationManager Navigation
-
-
+@inject FilterPanelService FilterPanelService
+@rendermode InteractiveServer
 
 <div class="container-fluid">
     <div class="row">
-       
         <div class="col">
             <nav class="navbar navbar-expand-sm navbar-light bg-light fixed-top shadow-sm w-100">
                 <div class="container-fluid justify-content-start">
+
                     <!-- Logo -->
                     <a class="navbar-brand d-flex align-items-center me-3" href="/">
-                        <img src="https://getbootstrap.com/docs/5.0/assets/brand/bootstrap-logo.svg" alt="Logo" style="height: 40px;" class="me-2" />
+                        <img src="https://getbootstrap.com/docs/5.0/assets/brand/bootstrap-logo.svg"
+                             alt="Logo" style="height: 40px;" class="me-2" />
                         <span>MiEmpresa</span>
                     </a>
 
-                    <!-- Botón menú (sidebar) -->
+                    <!-- Botón menú sidebar -->
                     <button class="btn btn-outline-secondary me-3" @onclick="ToggleSidebar">
                         <i class="bi bi-list"></i>
                     </button>
 
-
-                    <!-- Formulario de búsqueda (flex-grow para que tome el espacio restante) -->
-                    <form class="flex-grow-1 me-3">
+                    <!-- Búsqueda -->
+                    @* <div class="flex-grow-1 me-3">
                         <div class="input-group">
-                            <input type="text" class="form-control" placeholder="Buscar productos..." />
-                            <button class="btn btn-outline-secondary" type="submit">
+                            <input type="text"
+                                   class="form-control"
+                                   placeholder="Buscar productos..."
+                                   @bind="_searchTerm"
+                                   @bind:event="oninput"
+                                   @onkeydown="OnSearchKeyDown" />
+                            <button class="btn btn-outline-secondary" @onclick="Buscar">
                                 <i class="bi bi-search"></i>
                             </button>
                         </div>
-                    </form>
+                    </div> *@
 
-                    <!-- Botón del carrito -->
-                    <button class="btn btn-outline-primary position-relative" @onclick="IrAlCarrito" >
+                    <!-- Búsqueda + botón filtros -->
+                    <div class="flex-grow-1 me-3 position-relative">
+                        <div class="input-group">
+                            <input type="text"
+                                   class="form-control"
+                                   placeholder="Buscar productos..."
+                                   @bind="_searchTerm"
+                                   @bind:event="oninput"
+                                   @onkeydown="OnSearchKeyDown" />
+
+                            <!-- Botón filtros con badge -->
+                            <button class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                                    @onclick="() => FilterPanelService.Toggle()">
+                                <i class="bi bi-sliders"></i>
+                                Filtros
+                                @if (_activeFilterCount > 0)
+                                {
+                                    <span class="badge bg-primary rounded-pill">@_activeFilterCount</span>
+                                }
+                            </button>
+
+                            <button class="btn btn-outline-secondary" @onclick="Buscarv">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Carrito -->
+                    <button class="btn btn-outline-primary position-relative" @onclick="IrAlCarrito">
                         <i class="bi bi-cart"></i>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                            @* @CartService.CarritoCantidad *@
-                            @(CartService.Count > 0 ? CartService.Count.ToString() : "0")
-                        </span>
+                        @if (CartService.Count > 0)
+                        {
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                @CartService.Count
+                            </span>
+                        }
                     </button>
 
                 </div>
@@ -50,45 +83,72 @@
 </div>
 
 @code {
-    
-   // private string mensaje = "Esperando...";
-    private Action? _cartChanged;
+    private string _searchTerm = "";
+
+    [Parameter] public int _activeFilterCount { get; set; } = 0;
+    [Parameter] public EventCallback OnOpenFilters { get; set; }
+
+    private async Task AbrirFiltros()
+        => await OnOpenFilters.InvokeAsync();
+
+
+    // ── ciclo de vida ─────────────────────────────────────────────
     protected override void OnInitialized()
     {
-        CartService.OnChange += () => InvokeAsync(StateHasChanged);
-        // _cartChanged = () => InvokeAsync(StateHasChanged);
-        // CartService.OnChange += _cartChanged;
+        // Guardamos referencia al delegate para poder desuscribirnos
+        CartService.OnChange += OnCartChanged;
     }
 
-   // private bool _cartLoaded = false;
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await CartService.InitializeAsync(); // 🔥 SOLO AQUÍ
-            StateHasChanged(); // <-- Forzamos un primer render
+            await CartService.InitializeAsync();
+            StateHasChanged();
         }
     }
 
-      
+    private async void OnCartChanged()
+    {
+        await InvokeAsync(StateHasChanged);
+    }
+
     public void Dispose()
     {
-        if (_cartChanged != null)
-            CartService.OnChange -= _cartChanged;
-        
+        CartService.OnChange -= OnCartChanged;
     }
+
+    // ── búsqueda ──────────────────────────────────────────────────
+    private void Buscar()
+    {
+        if (string.IsNullOrWhiteSpace(_searchTerm)) return;
+        Navigation.NavigateTo($"/products?q={Uri.EscapeDataString(_searchTerm.Trim())}");
+    }
+    private void Buscarv()
+    {
+       
+        var term = _searchTerm?.Trim() ?? "";
+
+        if (string.IsNullOrWhiteSpace(term))
+            Navigation.NavigateTo("/product-search"); // sin ?q= → muestra todos
+        else
+            Navigation.NavigateTo($"/product-search?q={Uri.EscapeDataString(term)}");
+
+    }
+
+    private void OnSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") Buscarv();
+    }
+
+    // ── navegación ────────────────────────────────────────────────
     private void IrAlCarrito()
     {
-       Navigation.NavigateTo("/cart", forceLoad: true);
-        //Navigation.NavigateTo("/cart");
-     
+        Navigation.NavigateTo("/cart");
     }
+
     private void ToggleSidebar()
     {
-        Console.WriteLine("Toggle menu sidebar");
-        // Aquí puedes lanzar un evento o usar un servicio para abrir el menú lateral
+        Console.WriteLine("Toggle sidebar");
     }
 }
-
-
- 

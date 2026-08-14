@@ -15,13 +15,28 @@ namespace shop_cart.Services
 
         public async Task<List<CartItem>> LoadAsync()
         {
-            return await _localStorage.GetItemAsync<List<CartItem>>(CART_KEY)
-                   ?? new List<CartItem>();
+            try
+            {
+                return await _localStorage.GetItemAsync<List<CartItem>>(CART_KEY)
+                       ?? new List<CartItem>();
+            }
+            catch
+            {
+                // Return empty cart if local storage access fails (robust prerender behavior)
+                return new List<CartItem>();
+            }
         }
 
         public async Task SaveAsync(List<CartItem> items)
         {
-            await _localStorage.SetItemAsync(CART_KEY, items);
+            try
+            {
+                await _localStorage.SetItemAsync(CART_KEY, items);
+            }
+            catch
+            {
+                // Ignore save errors to avoid breaking the UI if storage is unavailable
+            }
         }
     }
 }

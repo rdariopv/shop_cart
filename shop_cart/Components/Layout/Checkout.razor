@@ -24,7 +24,7 @@
                     <li class="list-group-item d-flex justify-content-between lh-sm">
                         <div>
                             <h6 class="my-0">@item.Name x @item.Quantity</h6>
-                            <small class="text-muted">ID: @item.ProductItem.Id</small>
+                            <small class="text-muted">ID: @((item.ProductItem?.Id) ?? "N/A")</small>
                         </div>
                         <span class="text-muted">$@((item.Price * item.Quantity).ToString("F2"))</span>
                     </li>
@@ -41,18 +41,18 @@
                 <h4 class="mb-3">Datos Para La Factura</h4>
                 <div class="row g-3">
                     <div class="col-sm-6">
-                        <label for="firstName" class="form-label">Nombre</label>
-                        <input type="text" class="form-control" id="firstName" required>
+                        <label for="nitci" class="form-label">NIT/CI</label>
+                        <input type="text" class="form-control" id="nitci" required>
                         <div class="invalid-feedback">
-                            Se requiere un nombre válido.
+                            Se requiere un NIT/CI valido.
                         </div>
                     </div>
 
                     <div class="col-sm-6">
-                        <label for="lastName" class="form-label">Apellido</label>
-                        <input type="text" class="form-control" id="lastName" required>
+                        <label for="nfac" class="form-label">Nombre Factura</label>
+                        <input type="text" class="form-control" id="nfac" required>
                         <div class="invalid-feedback">
-                            Se requiere un apellido válido.
+                            Se requiere un Nombre Factura válido.
                         </div>
                     </div>
 
@@ -141,7 +141,7 @@
                 </div>
                 <hr class="my-4">
 
-                <button class="w-100 btn btn-primary btn-lg" type="submit">Finalizar Compra</button>
+                <button class="w-100 btn btn-primary btn-lg" @onclick="FinalizarCompra" type="button">Finalizar Compra</button>
                 <br />
                 <br />
             </form>

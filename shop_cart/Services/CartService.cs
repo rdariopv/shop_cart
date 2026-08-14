@@ -29,6 +29,9 @@ namespace shop_cart.Services
         public async Task InitializeAsync()
         {
             var items = await _storage.LoadAsync();
+           // _state.SetItems(items);
+
+           /// var items = new List<CartItem>(); // 👈 prueba
             _state.SetItems(items);
         }
 

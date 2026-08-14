@@ -5,7 +5,7 @@
 @using shop_cart.Models
 @using shop_cart.Services
 @inject NavigationManager Navigation
-@rendermode InteractiveServer
+
 @inject CartService CartService
  
 <div class="col-md-4 mb-4">
@@ -25,24 +25,28 @@
 
 
 @code {
-    [Parameter] public string ProductId { get; set; }
-    [Parameter] public string ImageUrl { get; set; }
-    [Parameter] public string Title { get; set; }
-    [Parameter] public string Description { get; set; }
+    [Parameter] public string ProductId { get; set; } = "";
+    [Parameter] public string ImageUrl { get; set; } = "";
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string Description { get; set; } = "";
     [Parameter] public decimal Price { get; set; }
 
 
 
     private async Task   AgregarAlCarrito()
     {
-        //Console.WriteLine($"Agregado: {Producto.Nombre}, Cantidad: {Cantidad}");
+       
         // Aquí iría la lógica para agregar al carrito
-        Product product = new Product();
-        product.Id = ProductId;
-        product.Imagen = ImageUrl;
-        product.Nombre  = Title;
-        product.Precio  = Price;
-        product.Descripcion  = Description;
-       await CartService.AddProduct(product, 1);
+        var product = new Product
+            {
+                Id = ProductId,
+                Imagen = ImageUrl,
+                Nombre = Title,
+                Precio = Price,
+                Descripcion = Description
+            };
+       
+        await CartService.AddProduct(product, 1);
+        Console.WriteLine($"Agregado: {product.Nombre}, Cantidad: {1}");
     }
 }

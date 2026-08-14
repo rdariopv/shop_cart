@@ -1,146 +1,190 @@
-﻿@using shop_cart.Models
+﻿@page "/cart"
+ @rendermode InteractiveServer 
+@* @rendermode @(new InteractiveServerRenderMode(prerender: false)) *@
+@using shop_cart.Models
 @using shop_cart.Services
 @implements IDisposable
- @rendermode InteractiveServer 
 @inject NavigationManager Navigation
- @inject CartService CartService
- @page "/cart"
+@inject CartService CartService
+
 <br />
 <br />
+
 <div class="container mt-4">
     <h2>🛒 Tu Carrito</h2>
 
-    @if (CartService.Items.Count == 0)
+    @if (!_initialized)
+    {
+        <div class="text-center mt-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando carrito...</span>
+            </div>
+        </div>
+    }
+    else if (CartService.Items.Count == 0)
     {
         <div class="alert alert-info mt-4">
-            El carrito está vacío. Agrega productos para verlos aquí.
+            El carrito está vacío. <a href="/" class="alert-link">Agrega productos</a> para verlos aquí.
         </div>
     }
     else
     {
         <ul class="list-group mb-4">
-            @foreach (var item in CartService.Items)
+            @foreach (var item in CartService.Items.ToList())
             {
-
-                @* <li class="list-group-item">
-                    <div class="row g-3">
-                        <!-- Imagen -->
-                        <div class="col-sm d-flex align-items-stretch">
-                            <img src="@item.ProductItem.Imagen" alt="Imagen del producto" class="img-fluid rounded border" style="max-height: 180px;" />
-                        </div>
-
-                        <!-- Descripción -->
-                        <div class="col-sm mt-2  flex-grow-1 d-flex flex-column justify-content-between">
-                            <h5>@item.Name</h5>
-                            <p class="mb-1">@item.ProductItem.Descripcion</p>
-                            <p class="mb-1"><strong>ID:</strong> @item.ProductItem.Id</p>
-                            <p class="mb-1"><strong>Precio:</strong> $@item.Price</p>
-                            <p class="mb-1"><strong>Cantidad:</strong> @item.Quantity</p>
-                        </div>
-
-                        <!-- Botones -->
-                        <div class="col-sm d-flex flex-column align-items-end justify-content-center gap-1">
-                            <button class="btn btn-outline-primary btn-sm" @onclick="() => Incrementar(item)">➕ Agregar</button>
-                            <button class="btn btn-outline-secondary btn-sm" @onclick="() => Decrementar(item)">➖ Quitar</button>
-                            <button class="btn btn-outline-danger btn-sm" @onclick="() => Eliminar(item)">🗑 Eliminar</button>
-                        </div>
-                    </div> 
-                </li>*@
-
-
-
-                <li class="list-group-item border-bottom p-3">
+                <li class="list-group-item border-bottom p-3" @key="@(item.ProductItem?.Id ?? item.Name)">
                     <div class="d-flex flex-column flex-md-row align-items-stretch">
 
-                        <!-- Imagen -->
                         <div class="text-center me-md-3 mb-3 mb-md-0">
-                            <img src="@item.ProductItem.Imagen" alt="Imagen del producto"
-                            class="img-fluid rounded border"
-                            style="width: 180px; height: 120px; object-fit: cover;" />
+                            @if (item.ProductItem != null)
+                            {
+                                <img src="@item.ProductItem.Imagen"
+                                alt="Imagen del producto"
+                                class="img-fluid rounded border"
+                                style="width: 180px; height: 120px; object-fit: cover;" />
+                            }
+                            else
+                            {
+                                <div class="d-flex align-items-center justify-content-center bg-light border rounded"
+                                     style="width: 180px; height: 120px;">
+                                    <span class="text-muted">Sin imagen</span>
+                                </div>
+                            }
                         </div>
 
-                        <!-- Descripción -->
                         <div class="flex-grow-1 d-flex flex-column justify-content-between mb-3 mb-md-0">
                             <h5>@item.Name</h5>
-                            <p class="mb-1">@item.ProductItem.Descripcion</p>
-                            <p class="mb-1"><strong>ID:</strong> @item.ProductItem.Id</p>
-                            <p class="mb-1"><strong>Precio:</strong> $@item.Price</p>
-                            <p class="mb-1"><strong>Cantidad:</strong> @item.Quantity</p>
+                            <p class="mb-1">@((item.ProductItem?.Descripcion) ?? string.Empty)</p>
+                            <p class="mb-1"><strong>Precio unitario:</strong> $@item.Price.ToString("F2")</p>
+                            <p class="mb-1">
+                                <strong>Cantidad:</strong>
+                                <span class="badge bg-secondary ms-1">@item.Quantity</span>
+                            </p>
+                            <p class="mb-1">
+                                <strong>Subtotal:</strong>
+                                <span class="text-success fw-bold">
+                                    $@((item.Price * item.Quantity).ToString("F2"))
+                                </span>
+                            </p>
                         </div>
 
-                        <!-- Botones -->
-                        <div class="d-flex flex-md-column justify-content-center align-items-center gap-2">
-                            <button class="btn btn-outline-primary btn-sm" @onclick="() => Incrementar(item)">➕ Agregar</button>
-                            <button class="btn btn-outline-secondary btn-sm" @onclick="() => Decrementar(item)">➖ Quitar</button>
-                            <button class="btn btn-outline-danger btn-sm" @onclick="() => Eliminar(item)">🗑 Eliminar</button>
+                        <div class="d-flex flex-column justify-content-center align-items-center gap-2">
+                          
+                            <button class="btn btn-outline-primary btn-carrito"
+                            @onclick="() => Incrementar(item)"
+                            disabled="@_loading">
+                                ➕ Agregar
+                            </button>
+                            <button class="btn btn-outline-secondary btn-carrito"
+                            @onclick="() => Decrementar(item)"
+                            disabled="@_loading">
+                                ➖ Quitar
+                            </button>
+                            <button class="btn btn-outline-danger btn-carrito"
+                            @onclick="() => Eliminar(item)"
+                            disabled="@_loading">
+                                🗑 Eliminar
+                            </button>
                         </div>
                     </div>
                 </li>
-
             }
 
-            <li class="list-group-item">
-                <div class="d-flex justify-content-end align-items-center gap-4">
-                    <h4 class="mb-0">Total: <span class="text-success">$@CalcularTotal().ToString("F2")</span></h4>
-                    <button class="btn btn-success" @onclick="IrAlCheckout">Proceder al pago</button>
+            <li class="list-group-item bg-light">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                   
+                    <span class="text-muted">@CartService.Count producto(s)</span>
+                    <h4 class="mb-0">
+                        Total: <span class="text-success">$@CalcularTotal().ToString("F2")</span>
+                    </h4>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-danger btn-sm"
+                        @onclick="VaciarCarrito"
+                        disabled="@_loading">
+                            🗑 Vaciar carrito
+                        </button>
+                        <button class="btn btn-success"
+                        @onclick="IrAlCheckout"
+                        disabled="@_loading">
+                            💳 Proceder al pago
+                        </button>
+                    </div>
                 </div>
             </li>
-
         </ul>
-
-        <div class="container mt-4">
-
-        </div>
     }
 </div>
-
-@code {
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await CartService.InitializeAsync();
-            StateHasChanged();
-        }
-    }
-
-    protected override void  OnInitialized()
-    {
-        CartService.OnChange += StateHasChanged;
+<style>
+    .btn-carrito {
+        width: 110px;
       
     }
+
+  
+    }
+</style>
+@code {
+    private bool _initialized = false;
+    private bool _loading = false;
+     
+    protected override void OnInitialized()
+    {
+        // Suscribir ANTES de cualquier carga
+        CartService.OnChange += OnCartChanged;
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        await CartService.InitializeAsync();
+        _initialized = true;
+        StateHasChanged();
+    }
+    private  void OnCartChanged()
+    {
+         InvokeAsync(StateHasChanged);
+    }
+
     public void Dispose()
     {
-        CartService.OnChange -= StateHasChanged;
+        CartService.OnChange -= OnCartChanged;
     }
 
-    void IrAlCheckout()
+    private async Task Incrementar(CartItem item)
     {
-        Navigation.NavigateTo("/checkout",true);
+        _loading = true;
+        await CartService.IncrementAsync(item);
+        _loading = false;
     }
 
-    async Task Incrementar(CartItem item)
+    private async Task Decrementar(CartItem item)
     {
-        await CartService.AddProduct(item.ProductItem,1);
-    }
-    
-
-    async Task Decrementar(CartItem item)
-    {
-       // await CartService.DecrementarAsync(item);
+        _loading = true;
         await CartService.DecrementAsync(item);
+        _loading = false;
     }
 
-    async Task Eliminar(CartItem item)
+    private async Task Eliminar(CartItem item)
     {
+        _loading = true;
         await CartService.RemoveItemAsync(item);
+        _loading = false;
     }
 
-    decimal CalcularTotal()
+    private async Task VaciarCarrito()
     {
-        return CartService.Items
-            .Sum(i => i.Price * i.Quantity);
+        _loading = true;
+        await CartService.ClearAsync();
+        _loading = false;
+    }
+
+    private void IrAlCheckout()
+    {
+        Navigation.NavigateTo("/checkoutnew", true);
+    }
+
+    private decimal CalcularTotal()
+    {
+        return CartService.Items.Sum(i => i.Price * i.Quantity);
     }
 }
-

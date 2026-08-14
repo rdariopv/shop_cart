@@ -69,7 +69,7 @@
         var imagenIds = await ProductService.GetProductListImagesAsync(Id);
 
         Imagenes = imagenIds
-            .Select(id => $"https://localhost:7179/api/products/image/{id}")
+            .Select(id => $"https://store-api-bhab.onrender.com/api/products/image/{id}")
             .ToList();
     }
     // protected override void OnInitialized()

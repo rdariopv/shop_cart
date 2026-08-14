@@ -1,0 +1,343 @@
+﻿<h3>CheckoutNew</h3>
+
+@page "/checkoutnew"
+@using shop_cart.Services
+@using shop_cart.Models
+@rendermode InteractiveServer
+@inject NavigationManager Navigation
+@inject CartService CartService
+@inject OrderService OrderService
+
+
+<br />
+<div class="container mt-4">
+    <div class="mb-3 text-center">
+        <i class="bi bi-cart-check-fill fs-1 text-primary"></i>
+    </div>
+    <h2 class="mb-4 text-center">Formulario de Pago</h2>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible">
+            @_errorMessage
+            <button type="button" class="btn-close" @onclick="() => _errorMessage = null"></button>
+        </div>
+    }
+
+    @if (_orderSuccess)
+    {
+       @*  <div class="alert alert-success text-center">
+            <i class="bi bi-check-circle-fill fs-2 d-block mb-2"></i>
+            <h4>¡Orden confirmada!</h4>
+            <p>Número de orden: <strong>@_orderId</strong></p>
+            <p>Total pagado: <strong>$@_orderTotal.ToString("F2")</strong></p>
+            <a href="/" class="btn btn-primary mt-2">Volver al inicio</a>
+        </div> *@
+
+        <div class="alert alert-success text-center py-4">
+            <i class="bi bi-check-circle-fill fs-1 text-success d-block mb-3"></i>
+            <h4 class="fw-bold">¡Orden confirmada!</h4>
+            <p class="text-muted mb-1">
+                Número de orden: <strong class="text-dark">@_orderId</strong>
+            </p>
+            <p class="text-muted mb-4">
+                Total pagado: <strong class="text-success">$@_orderTotal.ToString("F2")</strong>
+            </p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="/orden/@_orderId" class="btn btn-primary">
+                    <i class="bi bi-receipt me-1"></i> Ver comprobante e imprimir
+                </a>
+                <a href="/" class="btn btn-outline-secondary">
+                    <i class="bi bi-house me-1"></i> Volver al inicio
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <hr class="my-4">
+        <div class="row g-5">
+
+            <!-- Resumen del carrito -->
+            <div class="col-md-5 col-lg-4 order-md-last">
+                <h4 class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-primary">Tu carrito</span>
+                    <span class="badge bg-primary rounded-pill">@CartService.GetCartCount()</span>
+                </h4>
+                <ul class="list-group mb-3">
+                    @foreach (var item in CartService.Items)
+                    {
+                        <li class="list-group-item d-flex justify-content-between lh-sm">
+                            <div>
+                                <h6 class="my-0">@item.Name x @item.Quantity</h6>
+                                <small class="text-muted">ID: @(item.ProductItem?.Id ?? "N/A")</small>
+                            </div>
+                            <span class="text-muted">$@((item.Price * item.Quantity).ToString("F2"))</span>
+                        </li>
+                    }
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Total</span>
+                        <strong>$@CartService.Items.Sum(i => i.Price * i.Quantity).ToString("F2")</strong>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Formulario -->
+            <div class="col-md-7 col-lg-8">
+                <h4 class="mb-3">Datos Para La Factura</h4>
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <label class="form-label">NIT/CI</label>
+                        <input type="text" class="form-control @(_submitted && string.IsNullOrWhiteSpace(_nitci) ? "is-invalid" : "")"
+                               @bind="_nitci" />
+                        <div class="invalid-feedback">Se requiere un nombre válido.</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label">NOMBRE FACTURA</label>
+                        <input type="text" class="form-control @(_submitted && string.IsNullOrWhiteSpace(_nombrefac) ? "is-invalid" : "")"
+                               @bind="_nombrefac" />
+                        <div class="invalid-feedback">Se requiere un apellido válido.</div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Correo electrónico</label>
+                        <input type="email" class="form-control @(_submitted && string.IsNullOrWhiteSpace(_email) ? "is-invalid" : "")"
+                               @bind="_email" placeholder="tucorreo@ejemplo.com" />
+                        <div class="invalid-feedback">Ingresa un correo válido.</div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+                <h4 class="mb-3">Pago</h4>
+
+                <div class="my-3">
+                    <div class="form-check">
+                        <input id="creditdebit" name="paymentMethod" type="radio"
+                               class="form-check-input" value="card"
+                               checked="@(_selectedPaymentMethod == "card")"
+                               @onchange="HandlePaymentMethodChange" />
+                        <label class="form-check-label" for="creditdebit">Tarjeta de Crédito/Débito</label>
+                    </div>
+                    <div class="form-check">
+                        <input id="payqr" name="paymentMethod" type="radio"
+                               class="form-check-input" value="qr"
+                               checked="@(_selectedPaymentMethod == "qr")"
+                               @onchange="HandlePaymentMethodChange" />
+                        <label class="form-check-label" for="payqr">QR - Pago Simple</label>
+                    </div>
+                    <div class="form-check">
+                        <input id="efectivo" name="paymentMethod" type="radio"
+                               class="form-check-input" value="cash"
+                               checked="@(_selectedPaymentMethod == "cash")"
+                               @onchange="HandlePaymentMethodChange" />
+                        <label class="form-check-label" for="efectivo">Efectivo</label>
+                    </div>
+                </div>
+
+                <!-- Tarjeta -->
+                @if (_selectedPaymentMethod == "card")
+                {
+                    <div class="row gy-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nombre en la tarjeta</label>
+                            <input type="text" class="form-control" @bind="_cardName" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Número de tarjeta</label>
+                            <input type="text" class="form-control" @bind="_cardNumber"
+                                   maxlength="19" placeholder="1234 5678 9012 3456" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Expiración</label>
+                            <input type="text" class="form-control" @bind="_cardExpiration"
+                                   placeholder="MM/AA" maxlength="5" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">CVV</label>
+                            <input type="text" class="form-control" @bind="_cardCvv"
+                                   maxlength="4" placeholder="123" />
+                        </div>
+                    </div>
+                }
+
+                <!-- QR -->
+                @if (_selectedPaymentMethod == "qr" && !string.IsNullOrEmpty(_qrImageBase64))
+                {
+                    <div class="text-center mt-3">
+                        <img src="@_qrImageBase64" class="img-fluid rounded"
+                             alt="QR de pago" style="max-width: 280px;" />
+                        <p class="mt-2 text-muted">Escanee el código QR para pagar.</p>
+                    </div>
+                }
+
+                <!-- Efectivo -->
+                @if (_selectedPaymentMethod == "cash")
+                {
+                    <div class="mt-3">
+                        <label class="form-label">Notas adicionales o nombre del receptor</label>
+                        <input type="text" class="form-control" @bind="_cashNote"
+                               placeholder="Ej: Juan Pérez" />
+                    </div>
+                }
+
+                <hr class="my-4">
+
+                <button class="w-100 btn btn-primary btn-lg"
+                        @onclick="FinalizarCompra"
+                        disabled="@_procesando">
+                    @if (_procesando)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        <span>Procesando...</span>
+                    }
+                    else
+                    {
+                        <span>Finalizar Compra</span>
+                    }
+                </button>
+                <br /><br />
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    // ── datos del formulario ──────────────────────────────────────
+    private string _nitci = "";
+    private string _nombrefac = "";
+    private string _email = "";
+    private string _selectedPaymentMethod = "card";
+    private string _cardName = "";
+    private string _cardNumber = "";
+    private string _cardExpiration = "";
+    private string _cardCvv = "";
+    private string _cashNote = "";
+    private string? _qrImageBase64;
+
+    // ── estado UI ─────────────────────────────────────────────────
+    private bool _procesando = false;
+    private bool _submitted = false;
+    private bool _orderSuccess = false;
+    private bool _initialized = false;
+    private string? _errorMessage;
+    private string _orderId = "";
+    private decimal _orderTotal = 0;
+
+    // ── ciclo de vida ─────────────────────────────────────────────
+    protected override void OnInitialized()
+    {
+        CartService.OnChange += OnCartChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_initialized)
+        {
+            _initialized = true;
+            await CartService.InitializeAsync();
+            StateHasChanged();
+        }
+    }
+
+    private async void OnCartChanged()
+    {
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        CartService.OnChange -= OnCartChanged;
+    }
+
+    // ── métodos ───────────────────────────────────────────────────
+    private void HandlePaymentMethodChange(ChangeEventArgs e)
+    {
+        _selectedPaymentMethod = e.Value?.ToString() ?? "card";
+
+        if (_selectedPaymentMethod == "qr")
+        {
+            var total = CartService.Items.Sum(i => i.Price * i.Quantity);
+            _qrImageBase64 = CartService.GenerateQrAsBase64(
+                $"Pago total: ${total:F2}");
+        }
+        else
+        {
+            _qrImageBase64 = null;
+        }
+    }
+
+    private bool FormularioValido()
+    {
+        if (string.IsNullOrWhiteSpace(_nitci)) return false;
+        if (string.IsNullOrWhiteSpace(_nombrefac)) return false;
+        if (string.IsNullOrWhiteSpace(_email)) return false;
+        if (!CartService.Items.Any()) return false;
+        return true;
+    }
+
+    private async Task FinalizarCompra()
+    {
+        _submitted = true;
+        _errorMessage = null;
+
+        if (!FormularioValido())
+        {
+            _errorMessage = "Por favor completa todos los campos requeridos.";
+            return;
+        }
+
+        _procesando = true;
+
+        var request = new OrderRequest
+        {
+            Customer = new CustomerInfo
+            {
+                NitCi = _nitci,
+                NombreFac = _nombrefac,
+                Email = _email
+            },
+            PaymentMethod = _selectedPaymentMethod,
+            Card = _selectedPaymentMethod == "card" ? new CardInfo
+            {
+                CardName = _cardName,
+                CardNumber = _cardNumber,
+                Expiration = _cardExpiration,
+                Cvv = _cardCvv
+            } : null,
+            CashNote = _selectedPaymentMethod == "cash" ? _cashNote : null,
+            Items = CartService.Items.Select(i => new OrderItemDto
+            {
+                ProductId = i.ProductItem?.Id ?? "",
+                Name = i.Name,
+                Price = i.Price,
+                Quantity = i.Quantity,
+                Subtotal = i.Price * i.Quantity
+            }).ToList(),
+            Total = CartService.Items.Sum(i => i.Price * i.Quantity)
+        };
+
+        try
+        {
+            var result = await OrderService.SubmitOrderAsync(request);
+
+            if (result.Success)
+            {
+                _orderId = result.OrderId;
+                _orderTotal = result.Total;
+                _orderSuccess = true;
+                await CartService.ClearAsync();
+            }
+            else
+            {
+                _errorMessage = result.Message;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error al procesar la orden: {ex.Message}";
+        }
+        finally
+        {
+            _procesando = false;
+        }
+    }
+}

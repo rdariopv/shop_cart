@@ -1,0 +1,560 @@
+﻿@page "/orden/{OrderId}"
+@rendermode InteractiveServer
+@using shop_cart.Models
+@using shop_cart.Services
+@inject OrderService OrderService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<style>
+    :root {
+        --receipt-bg: #ffffff;
+        --receipt-border: #e2e8f0;
+        --receipt-accent: #1a56db;
+        --receipt-accent-light: #eff6ff;
+        --receipt-text: #1e293b;
+        --receipt-muted: #64748b;
+        --receipt-success: #16a34a;
+        --receipt-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+
+    .receipt-page {
+        background: #f1f5f9;
+        min-height: 100vh;
+        padding: 2rem 1rem 4rem;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    .receipt-wrapper {
+        max-width: 680px;
+        margin: 0 auto;
+    }
+
+    .receipt-actions {
+        display: flex;
+        gap: .75rem;
+        justify-content: flex-end;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-print {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .55rem 1.2rem;
+        border-radius: 8px;
+        font-size: .9rem;
+        font-weight: 500;
+        cursor: pointer;
+        border: none;
+        transition: all .15s;
+    }
+
+    .btn-print-primary {
+        background: var(--receipt-accent);
+        color: #fff;
+    }
+
+        .btn-print-primary:hover {
+            background: #1740a8;
+        }
+
+    .btn-print-secondary {
+        background: #fff;
+        color: var(--receipt-text);
+        border: 1px solid var(--receipt-border);
+    }
+
+        .btn-print-secondary:hover {
+            background: #f8fafc;
+        }
+
+    .receipt-card {
+        background: var(--receipt-bg);
+        border-radius: 16px;
+        box-shadow: var(--receipt-shadow);
+        overflow: hidden;
+    }
+
+    .receipt-header {
+        background: var(--receipt-accent);
+        color: #fff;
+        padding: 2rem 2rem 1.5rem;
+    }
+
+    .receipt-header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .receipt-logo {
+        font-size: 1.3rem;
+        font-weight: 700;
+        letter-spacing: -.5px;
+    }
+
+        .receipt-logo span {
+            opacity: .7;
+            font-weight: 400;
+        }
+
+    .receipt-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        background: rgba(255,255,255,.2);
+        border: 1px solid rgba(255,255,255,.3);
+        border-radius: 20px;
+        padding: .3rem .85rem;
+        font-size: .8rem;
+        font-weight: 600;
+        letter-spacing: .3px;
+    }
+
+    .receipt-status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #4ade80;
+        box-shadow: 0 0 6px #4ade80;
+    }
+
+    .receipt-title {
+        margin-top: 1.5rem;
+        font-size: 1rem;
+        opacity: .8;
+        margin-bottom: .25rem;
+    }
+
+    .receipt-order-id {
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: -.5px;
+    }
+
+    .receipt-date {
+        opacity: .7;
+        font-size: .85rem;
+        margin-top: .25rem;
+    }
+
+    .receipt-body {
+        padding: 2rem;
+    }
+
+    .receipt-section {
+        margin-bottom: 1.75rem;
+    }
+
+    .receipt-section-title {
+        font-size: .7rem;
+        font-weight: 700;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        color: var(--receipt-muted);
+        margin-bottom: .85rem;
+        padding-bottom: .5rem;
+        border-bottom: 1px solid var(--receipt-border);
+    }
+
+    .receipt-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+    }
+
+    @@media (max-width: 500px) {
+        .receipt-info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .receipt-info-box {
+        background: #f8fafc;
+        border: 1px solid var(--receipt-border);
+        border-radius: 10px;
+        padding: 1rem 1.1rem;
+    }
+
+    .receipt-info-label {
+        font-size: .75rem;
+        color: var(--receipt-muted);
+        margin-bottom: .2rem;
+    }
+
+    .receipt-info-value {
+        font-size: .95rem;
+        font-weight: 600;
+        color: var(--receipt-text);
+    }
+
+    .receipt-info-sub {
+        font-size: .82rem;
+        color: var(--receipt-muted);
+        margin-top: .1rem;
+    }
+
+    .receipt-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .receipt-table th {
+            font-size: .7rem;
+            font-weight: 700;
+            letter-spacing: .8px;
+            text-transform: uppercase;
+            color: var(--receipt-muted);
+            padding: .5rem .75rem;
+            text-align: left;
+            border-bottom: 2px solid var(--receipt-border);
+        }
+
+            .receipt-table th:last-child, .receipt-table td:last-child {
+                text-align: right;
+            }
+
+        .receipt-table td {
+            padding: .85rem .75rem;
+            font-size: .9rem;
+            color: var(--receipt-text);
+            border-bottom: 1px solid var(--receipt-border);
+            vertical-align: middle;
+        }
+
+        .receipt-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .receipt-table tr:hover td {
+            background: #f8fafc;
+        }
+
+    .receipt-product-name {
+        font-weight: 500;
+    }
+
+    .receipt-product-id {
+        font-size: .75rem;
+        color: var(--receipt-muted);
+        margin-top: .1rem;
+    }
+
+    .receipt-qty-badge {
+        display: inline-block;
+        background: var(--receipt-accent-light);
+        color: var(--receipt-accent);
+        border-radius: 5px;
+        padding: .15rem .5rem;
+        font-size: .78rem;
+        font-weight: 600;
+    }
+
+    .receipt-totals {
+        margin-top: 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: .4rem;
+    }
+
+    .receipt-totals-row {
+        display: flex;
+        gap: 3rem;
+        font-size: .9rem;
+        color: var(--receipt-muted);
+    }
+
+        .receipt-totals-row.total {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--receipt-text);
+            padding-top: .6rem;
+            border-top: 2px solid var(--receipt-border);
+            margin-top: .2rem;
+        }
+
+            .receipt-totals-row.total .amount {
+                color: var(--receipt-success);
+            }
+
+    .receipt-footer {
+        background: var(--receipt-accent-light);
+        border-top: 1px solid var(--receipt-border);
+        padding: 1.25rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .receipt-footer-text {
+        font-size: .82rem;
+        color: var(--receipt-muted);
+    }
+
+        .receipt-footer-text strong {
+            color: var(--receipt-accent);
+        }
+
+    .receipt-footer-id {
+        font-size: .78rem;
+        font-family: 'Courier New', monospace;
+        color: var(--receipt-muted);
+        background: #fff;
+        border: 1px solid var(--receipt-border);
+        border-radius: 6px;
+        padding: .25rem .6rem;
+    }
+
+    .receipt-loading {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--receipt-muted);
+    }
+
+        .receipt-loading .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--receipt-border);
+            border-top-color: var(--receipt-accent);
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+
+<div class="receipt-page">
+    <div class="receipt-wrapper">
+
+        @if (_loading)
+        {
+            <div class="receipt-loading">
+                <div class="spinner"></div>
+                <p>Cargando comprobante...</p>
+            </div>
+        }
+        else if (_order == null)
+        {
+            <div class="alert alert-danger text-center mt-4">
+                <i class="bi bi-exclamation-triangle fs-2 d-block mb-2"></i>
+                <h5>Orden no encontrada</h5>
+                <p class="text-muted">No se encontró la orden <strong>@OrderId</strong>.</p>
+                <button class="btn btn-primary mt-2" @onclick='() => Navigation.NavigateTo("/")'>
+                    Volver al inicio
+                </button>
+            </div>
+        }
+        else
+        {
+            <!-- Botones fuera del div que se imprime -->
+            <div class="receipt-actions">
+                <button class="btn-print btn-print-secondary" @onclick='() => Navigation.NavigateTo("/")'>
+                    <i class="bi bi-arrow-left"></i> Volver al inicio
+                </button>
+                <button class="btn-print btn-print-secondary" @onclick='() => Navigation.NavigateTo("/products")'>
+                    <i class="bi bi-bag"></i> Seguir comprando
+                </button>
+                <button class="btn-print btn-print-primary" @onclick="Imprimir">
+                    <i class="bi bi-printer"></i> Imprimir comprobante
+                </button>
+            </div>
+
+            <!-- SOLO este div se envía a imprimir -->
+            <div class="receipt-card" id="receipt-content">
+
+                <div class="receipt-header">
+                    <div class="receipt-header-top">
+                        <div class="receipt-logo">Mi<span>Empresa</span></div>
+                        <div class="receipt-status-badge">
+                            <div class="receipt-status-dot"></div>
+                            @_order.Status
+                        </div>
+                    </div>
+                    <div class="receipt-title">Comprobante de compra</div>
+                    <div class="receipt-order-id">#@_order.OrderId</div>
+                    <div class="receipt-date">
+                        @_order.CreatedAt.ToString("dddd, dd 'de' MMMM 'de' yyyy — HH:mm",
+                                 new System.Globalization.CultureInfo("es-ES"))
+                    </div>
+                </div>
+
+                <div class="receipt-body">
+
+                    <div class="receipt-section">
+                        <div class="receipt-section-title">Información</div>
+                        <div class="receipt-info-grid">
+                            <div class="receipt-info-box">
+                                <div class="receipt-info-label">Cliente</div>
+                                <div class="receipt-info-value">
+                                    @_order.Customer.NitCi  @_order.Customer.NombreFac
+                                </div>
+                                <div class="receipt-info-sub">@_order.Customer.Email</div>
+                            </div>
+                            <div class="receipt-info-box">
+                                <div class="receipt-info-label">Método de pago</div>
+                                <div class="receipt-info-value">
+                                    @GetPaymentIcon(_order.PaymentMethod) @_order.PaymentMethod
+                                </div>
+                                <div class="receipt-info-sub">Pago procesado correctamente</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="receipt-section">
+                        <div class="receipt-section-title">Detalle de productos</div>
+                        <table class="receipt-table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th style="text-align:center">Cant.</th>
+                                    <th>Precio</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in _order.Items)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="receipt-product-name">@item.Name</div>
+                                            <div class="receipt-product-id">ID: @item.ProductId</div>
+                                        </td>
+                                        <td style="text-align:center">
+                                            <span class="receipt-qty-badge">x @item.Quantity</span>
+                                        </td>
+                                        <td>$@item.Price.ToString("F2")</td>
+                                        <td><strong>$@item.Subtotal.ToString("F2")</strong></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+
+                        <div class="receipt-totals">
+                            <div class="receipt-totals-row">
+                                <span>Subtotal</span>
+                                <span>$@_order.Items.Sum(i => i.Subtotal).ToString("F2")</span>
+                            </div>
+                            <div class="receipt-totals-row">
+                                <span>Envío</span>
+                                <span>Gratis</span>
+                            </div>
+                            <div class="receipt-totals-row total">
+                                <span>Total pagado</span>
+                                <span class="amount">$@_order.Total.ToString("F2")</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="receipt-footer">
+                    <div class="receipt-footer-text">
+                        Gracias por tu compra en <strong>MiEmpresa</strong>.
+                        Guarda este comprobante como respaldo de tu transacción.
+                    </div>
+                    <div class="receipt-footer-id">@_order.OrderId</div>
+                </div>
+
+            </div>
+        }
+    </div>
+</div>
+
+@* ── Función JS de impresión ─────────────────────────────────────────────────
+   Extrae innerHTML de #receipt-content y lo abre en ventana nueva limpia.
+   Esto soluciona el problema de Blazor Server donde window.print() imprime
+   todo el DOM incluyendo navbar y layout.
+   ─────────────────────────────────────────────────────────────────────────── *@
+<script>
+    window.printReceipt = function (elementId) {
+
+        var el = document.getElementById(elementId);
+        if (!el) {
+            console.error('[printReceipt] Elemento no encontrado:', elementId);
+            return;
+        }
+
+        // Recopilar todos los estilos del mismo dominio
+        var css = '';
+        for (var i = 0; i < document.styleSheets.length; i++) {
+            try {
+                var rules = document.styleSheets[i].cssRules || document.styleSheets[i].rules;
+                for (var j = 0; j < rules.length; j++) {
+                    css += rules[j].cssText + '\n';
+                }
+            } catch (e) {
+                // Ignorar hojas externas (CORS)
+            }
+        }
+
+        // Abrir ventana nueva con solo el comprobante
+        var win = window.open('', '_blank', 'width=820,height=950,scrollbars=yes');
+
+        win.document.write(
+            '<!DOCTYPE html><html lang="es"><head>' +
+            '<meta charset="utf-8"/>' +
+            '<title>Comprobante de compra</title>' +
+            '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"/>' +
+            '<style>' + css + '</style>' +
+            '<style>' +
+            /* Overrides limpios para la ventana de impresión */
+            'body{background:white!important;margin:0;padding:1.5rem;font-family:Segoe UI,system-ui,sans-serif;}' +
+            '.receipt-card{box-shadow:none!important;border:1px solid #ccc;border-radius:8px;overflow:hidden;}' +
+            '.receipt-header{background:#1a56db!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
+            '.receipt-accent-light{background:#eff6ff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
+            '@@media print{body{padding:0!important;}.receipt-card{border-radius:0!important;}.receipt-table tr{page-break-inside:avoid;}}' +
+            '</style>' +
+            '</head><body>' +
+            '<div class="receipt-card">' + el.innerHTML + '</div>' +
+            '<script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};<\/script>' +
+            '</body></html>'
+        );
+
+        win.document.close();
+    };
+</script>
+
+@code {
+    [Parameter] public string OrderId { get; set; } = "";
+
+    private Models.OrderDetail? _order;
+    private bool _loading = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        // TODO: cuando store-api tenga GET /api/orders/{orderId} implementado,
+        // GetOrderAsync llamará ese endpoint real en lugar de datos estáticos.
+        _order = await OrderService.GetOrderAsync(OrderId);
+        _loading = false;
+        StateHasChanged();
+    }
+
+    private async Task Imprimir()
+    {
+        // Extrae solo #receipt-content y lo imprime en ventana nueva.
+        // Evita que el navbar y layout de Blazor aparezcan en la impresión.
+        await JS.InvokeVoidAsync("printReceipt", "receipt-content");
+    }
+
+    private string GetPaymentIcon(string method) => method.ToLower() switch
+    {
+        var m when m.Contains("tarjeta") || m.Contains("card") => "💳",
+        var m when m.Contains("qr") => "📱",
+        var m when m.Contains("efectivo") || m.Contains("cash") => "💵",
+        _ => "💰"
+    };
+}

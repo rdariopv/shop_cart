@@ -1,45 +1,267 @@
 ﻿@using shop_cart.Models
 @using shop_cart.Services
+@rendermode InteractiveServer
 @inject ProductService ProductService
+@inject  FilterPanelService FilterPanelService
+@inject NavigationManager Navigation
+@implements IDisposable
 
-<h3>ProductList</h3>
-
-<div class="container mt-4">
-    <div class="row">
-        @foreach (var producto in productos)
-        {
-            <ProductCard ProductId="@producto.Id" 
-          
-            ImageUrl="@($"https://localhost:7179/api/products/image/{producto.Id}")"
-            Title="@producto.Nombre" 
-            Description="@producto.Descripcion"  Price="@producto.Precio" />
-        }
+<!-- ── MODAL DE FILTROS ── -->
+@if (_showFilters)
+{
+    <div class="position-fixed top-0 start-0 w-100 h-100"
+         style="z-index:1040; background:rgba(0,0,0,.3);"
+         @onclick="CerrarFiltros">
     </div>
+
+    <div class="position-fixed bg-white rounded-3 shadow-lg p-4"
+         style="z-index:1050; top:70px; left:50%; transform:translateX(-50%);
+                width:min(700px, 95vw);"
+    @onclick:stopPropagation>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold mb-0">Filtros</h6>
+            <button class="btn-close" @onclick="CerrarFiltros"></button>
+        </div>
+
+        <div class="row g-3">
+
+            <!-- Categoría -->
+            <div class="col-md-4">
+                <label class="form-label fw-semibold small">Categoría</label>
+                <select class="form-select form-select-sm" @bind="_filters.Categoria">
+                    <option value="">Todas</option>
+                    @foreach (var cat in _categorias)
+                    {
+                        <option value="@cat">@cat</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Marca -->
+            <div class="col-md-4">
+                <label class="form-label fw-semibold small">Marca</label>
+                <select class="form-select form-select-sm" @bind="_filters.Marca">
+                    <option value="">Todas</option>
+                    @foreach (var marca in _marcas)
+                    {
+                        <option value="@marca">@marca</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Precio -->
+            <div class="col-md-4">
+                <label class="form-label fw-semibold small">Precio</label>
+                <div class="d-flex gap-2">
+                    <input type="number" class="form-control form-control-sm"
+                           placeholder="Mín" @bind="_filters.PrecioMin" />
+                    <input type="number" class="form-control form-control-sm"
+                           placeholder="Máx" @bind="_filters.PrecioMax" />
+                </div>
+            </div>
+
+            <!-- Aquí puedes agregar más filtros en el futuro -->
+            <!--
+            <div class="col-md-4">
+                <label class="form-label fw-semibold small">Stock</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" @bind="_filters.SoloEnStock" />
+                    <label class="form-check-label small">Solo disponibles</label>
+                </div>
+            </div>
+            -->
+        </div>
+
+        <!-- Footer modal -->
+        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+            @if (_result != null)
+            {
+                <span class="text-muted small">@_result.TotalItems productos encontrados</span>
+            }
+            <div class="d-flex gap-2 ms-auto">
+                <button class="btn btn-sm btn-outline-secondary" @onclick="LimpiarFiltros">
+                    Limpiar
+                </button>
+                <button class="btn btn-sm btn-primary" @onclick="AplicarFiltros">
+                    Aplicar filtros
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- ── ÁREA DE PRODUCTOS ── -->
+<div style="margin-top:70px" class="container-fluid p-3">
+
+    <!-- Chips de filtros activos -->
+    @if (ActiveFilterCount > 0)
+    {
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            @if (!string.IsNullOrWhiteSpace(_filters.Categoria))
+            {
+                <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary">
+                    @_filters.Categoria
+                    <button type="button" class="btn-close btn-close ms-1"
+                            style="font-size:.6rem"
+                            @onclick="() => { _filters.Categoria = null; ApplyFilters(); }">
+                    </button>
+                </span>
+            }
+            @if (!string.IsNullOrWhiteSpace(_filters.Marca))
+            {
+                <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary">
+                    @_filters.Marca
+                    <button type="button" class="btn-close ms-1" style="font-size:.6rem"
+                            @onclick="() => { _filters.Marca = null; ApplyFilters(); }">
+                    </button>
+                </span>
+            }
+            @if (_filters.PrecioMin.HasValue || _filters.PrecioMax.HasValue)
+            {
+                <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary">
+                    $@(_filters.PrecioMin ?? 0) – $@(_filters.PrecioMax?.ToString() ?? "∞")
+                    <button type="button" class="btn-close ms-1" style="font-size:.6rem"
+                            @onclick="() => { _filters.PrecioMin = null; _filters.PrecioMax = null; ApplyFilters(); }">
+                    </button>
+                </span>
+            }
+        </div>
+    }
+
+    @if (_loading)
+    {
+        <div class="text-center mt-5">
+            <div class="spinner-border text-primary"></div>
+        </div>
+    }
+    else if (_result == null || !_result.Items.Any())
+    {
+        <div class="alert alert-info">No se encontraron productos.</div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var p in _result.Items)
+            {
+                <ProductCard ProductId="@p.Id"
+                             ImageUrl="@($"https://store-api-bhab.onrender.com/api/products/image/{p.Id}")"
+                             Title="@p.Nombre"
+                             Description="@p.Descripcion"
+                             Price="@p.Precio" />
+            }
+        </div>
+
+        @if (_result.TotalPages > 1)
+        {
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(_result.Page <= 1 ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => GoToPage(_result.Page - 1)">‹</button>
+                    </li>
+                    @for (int i = 1; i <= _result.TotalPages; i++)
+                    {
+                        var pg = i;
+                        <li class="page-item @(pg == _result.Page ? "active" : "")">
+                            <button class="page-link" @onclick="() => GoToPage(pg)">@pg</button>
+                        </li>
+                    }
+                    <li class="page-item @(_result.Page >= _result.TotalPages ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => GoToPage(_result.Page + 1)">›</button>
+                    </li>
+                </ul>
+            </nav>
+        }
+    }
 </div>
 
 @code {
-    private Product Producto = new();
-    private List<Product> productos = new();
-    // private List<Product> productos = new()
-    // {
-    //     new Product { Id = "1", Nombre = "Producto 1", Descripcion = "Descripción breve del producto.", Imagen = "images/product1.jpg", Precio=45 },
-    //     new Product { Id = "2", Nombre = "Producto 2", Descripcion = "Descripción breve del producto.", Imagen = "images/product2.jpg", Precio=46 },
-    //     new Product { Id = "3", Nombre = "Producto 3", Descripcion = "Descripción breve del producto.", Imagen = "images/product3.jpg", Precio=12 },
-    //     new Product { Id = "4", Nombre = "Producto 4", Descripcion = "Descripción breve del producto.", Imagen = "images/product4.jpg", Precio=13 },
-    //     new Product { Id = "5", Nombre = "Producto 5", Descripcion = "Descripción breve del producto.", Imagen = "images/product1.jpg", Precio=45 },
-    //     new Product { Id = "6", Nombre = "Producto 6", Descripcion = "Descripción breve del producto.", Imagen = "images/product2.jpg", Precio=45 },
-    //     // Agrega más productos aquí...
-    // };
+    private ProductFilterModel _filters = new();
+    private ProductFilterResult? _result;
+    private List<string> _categorias = new();
+    private List<string> _marcas = new();
+    private bool _loading = true;
+    private bool _showFilters = false;
+
+    private int ActiveFilterCount =>
+        (string.IsNullOrWhiteSpace(_filters.Categoria) ? 0 : 1) +
+        (string.IsNullOrWhiteSpace(_filters.Marca) ? 0 : 1) +
+        (_filters.PrecioMin.HasValue || _filters.PrecioMax.HasValue ? 1 : 0);
+
+    protected override void OnInitialized()
+    {
+        Navigation.LocationChanged += OnLocationChanged;
+        FilterPanelService.OnToggle += OnToggleFilters;  // 👈 agregar
+    }
+    // 👈 agregar este método
+    private async void OnToggleFilters()
+    {
+        _showFilters = !_showFilters;
+        await InvokeAsync(StateHasChanged);
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        var productosApi = await ProductService.GetProductsAsync();
-
-        foreach (var p in productosApi)
-        {
-            if (!productos.Any(x => x.Id == p.Id))
-                productos.Add(p);
-        }
+        _categorias = await ProductService.GetCategoriasAsync();
+        _marcas = await ProductService.GetMarcasAsync();
+        await LoadFromUrl();
     }
-  
+
+    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        await LoadFromUrl();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadFromUrl()
+    {
+        var uri = new Uri(Navigation.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        _filters.SearchTerm = query["q"] ?? "";
+        _filters.Page = 1;
+        await Search();
+    }
+
+    private void AbrirFiltros() => _showFilters = true;
+    private void CerrarFiltros() => _showFilters = false;
+
+    private async Task AplicarFiltros()
+    {
+        _filters.Page = 1;
+        _showFilters = false;
+        await Search();
+    }
+
+    private async Task LimpiarFiltros()
+    {
+        _filters = new ProductFilterModel { SearchTerm = _filters.SearchTerm };
+        _showFilters = false;
+        await Search();
+    }
+
+    private async Task ApplyFilters()
+    {
+        _filters.Page = 1;
+        await Search();
+    }
+
+    private async Task GoToPage(int page)
+    {
+        _filters.Page = page;
+        await Search();
+    }
+
+    private async Task Search()
+    {
+        _loading = true;
+        StateHasChanged();
+        _result = await ProductService.SearchProductsAsync(_filters);
+        _loading = false;
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+        FilterPanelService.OnToggle -= OnToggleFilters;  // 👈 agregar
+    }
 }
