@@ -56,10 +56,23 @@
                             <h5>@item.Name</h5>
                             <p class="mb-1">@((item.ProductItem?.Descripcion) ?? string.Empty)</p>
                             <p class="mb-1"><strong>Precio unitario:</strong> $@item.Price.ToString("F2")</p>
-                            <p class="mb-1">
+                           @*  <p class="mb-1">
                                 <strong>Cantidad:</strong>
                                 <span class="badge bg-secondary ms-1">@item.Quantity</span>
-                            </p>
+                            </p> *@
+
+                            <!-- NUEVO INPUT DE CANTIDAD -->
+                            <div class="mb-1 d-flex align-items-center">
+                                <strong class="me-2">Cantidad:</strong>
+                                <input type="number"
+                                       class="form-control form-control-sm text-center"
+                                       style="width: 80px;"
+                                       value="@item.Quantity"
+                                       @onchange="@(e => CambiarCantidad(item, e))"
+                                       min="1"
+                                       disabled="@_loading" />
+                            </div>
+
                             <p class="mb-1">
                                 <strong>Subtotal:</strong>
                                 <span class="text-success fw-bold">
@@ -186,5 +199,29 @@
     private decimal CalcularTotal()
     {
         return CartService.Items.Sum(i => i.Price * i.Quantity);
+    }
+
+    // NUEVO MÉTODO PARA CAMBIAR DIRECTAMENTE
+    private async Task CambiarCantidad(CartItem item, ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int nuevaCantidad))
+        {
+            _loading = true;
+
+            if (nuevaCantidad > 0)
+            {
+                item.Quantity = nuevaCantidad;
+                // Si guardas en LocalStorage o Base de datos, asegúrate de crear/llamar a un método de guardado:
+                // await CartService.SaveCartAsync(); o await CartService.UpdateQuantityAsync(item, nuevaCantidad);
+            }
+            else
+            {
+                // Si pone 0 o menos, asume que quiere eliminarlo
+                await CartService.RemoveItemAsync(item);
+            }
+
+            _loading = false;
+            StateHasChanged(); // Forzar renderizado para el subtotal/total
+        }
     }
 }
