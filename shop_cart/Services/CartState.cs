@@ -73,5 +73,15 @@ namespace shop_cart.Services
         {
             OnChange?.Invoke();
         }
+        // NUEVO MÉTODO AGREGADO AQUÍ 👇
+        public void UpdateQuantity(CartItem item, int nuevaCantidad)
+        {
+            var existing = items.FirstOrDefault(x => x.ProductItem.Id == item.ProductItem.Id);
+            if (existing != null)
+            {
+                existing.Quantity = nuevaCantidad;
+                NotifyStateChanged(); // Esto avisa al Navbar para que actualice el número
+            }
+        }
     }
 }

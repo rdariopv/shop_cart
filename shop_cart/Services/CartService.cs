@@ -65,8 +65,28 @@ namespace shop_cart.Services
             await _storage.SaveAsync(new List<CartItem>());
         }
         public int GetCartCount() => _state.Items.ToList().Count;
-       
-        
+
+        public async Task UpdateQuantityAsync(CartItem item, int nuevaCantidad)
+        {
+            // Buscamos el ítem exacto en la lista del estado
+            var cartItem = _state.Items.FirstOrDefault(i => i.ProductItem?.Id == item.ProductItem?.Id);
+
+            if (cartItem != null)
+            {
+                // Actualizamos la cantidad
+                cartItem.Quantity = nuevaCantidad;
+
+                // 1. Actualiza en memoria y dispara el evento para el Navbar
+                _state.UpdateQuantity(item, nuevaCantidad);
+                // Guardamos usando tu CartStorage // 2. Guarda en LocalStorage para mantenerlo al ir al Checkout
+                await _storage.SaveAsync(_state.Items.ToList());
+
+                // NOTA: Como la propiedad OnChange está delegada a _state, 
+                // no podemos hacer OnChange?.Invoke() directamente aquí.
+                // Si notas que el contador del carrito en el menú superior no se actualiza,
+                // tendrías que crear un método en CartState (ej. _state.UpdateQuantity) que actualice y dispare el evento.
+            }
+        }
 
         public string GenerateQrAsBase64(string content)
         {

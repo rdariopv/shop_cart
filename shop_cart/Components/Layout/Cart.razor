@@ -70,9 +70,12 @@
                                        value="@item.Quantity"
                                        @onchange="@(e => CambiarCantidad(item, e))"
                                        min="1"
+                                       inputmode="numeric"
+                                       pattern="[0-9]*"
+                                       enterkeyhint="done"
                                        disabled="@_loading" />
                             </div>
-
+                          
                             <p class="mb-1">
                                 <strong>Subtotal:</strong>
                                 <span class="text-success fw-bold">
@@ -210,9 +213,9 @@
 
             if (nuevaCantidad > 0)
             {
-                item.Quantity = nuevaCantidad;
-                // Si guardas en LocalStorage o Base de datos, asegúrate de crear/llamar a un método de guardado:
-                // await CartService.SaveCartAsync(); o await CartService.UpdateQuantityAsync(item, nuevaCantidad);
+                // EN LUGAR DE ESTO: item.Quantity = nuevaCantidad;
+                // AHORA HACEMOS ESTO:
+                await CartService.UpdateQuantityAsync(item, nuevaCantidad);
             }
             else
             {
@@ -224,4 +227,5 @@
             StateHasChanged(); // Forzar renderizado para el subtotal/total
         }
     }
+}
 }
