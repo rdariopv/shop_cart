@@ -9,11 +9,13 @@ namespace shop_cart.Services
     {
         private readonly CartState _state;
         private readonly CartStorage _storage;
+        private readonly PaymentService _payment;
 
-        public CartService(CartState state, CartStorage storage)
+        public CartService(CartState state, CartStorage storage, PaymentService payment)
         {
             _state = state;
             _storage = storage;
+            _payment = payment;
         }
 
         public event Action? OnChange
@@ -91,16 +93,28 @@ namespace shop_cart.Services
         public string GenerateQrAsBase64(string content)
         {
             using var qrGenerator = new QRCodeGenerator();
-            using var qrCodeData = qrGenerator.CreateQrCode(content, QRCodeGenerator.ECCLevel.Q);
-            using var qrCode = new PngByteQRCode(qrCodeData);
+            using var qrCodeData =qrGenerator.CreateQrCode(content,QRCodeGenerator.ECCLevel.Q);
+            using var qrCode =new PngByteQRCode(qrCodeData);
             var qrBytes = qrCode.GetGraphic(20);
             return "data:image/png;base64," + Convert.ToBase64String(qrBytes);
+
+
+            //using var qrGenerator = new QRCodeGenerator();
+            //using var qrCodeData = qrGenerator.CreateQrCode(content, QRCodeGenerator.ECCLevel.Q);
+            //using var qrCode = new PngByteQRCode(qrCodeData);
+            //var qrBytes = qrCode.GetGraphic(20);
+            //return "data:image/png;base64," + Convert.ToBase64String(qrBytes);
         }
 
-       
-      
-        
-       
+
+        public async Task<QrPaymentResult?> CreateQrPaymentAsync(string orderId,decimal amount)
+        {
+            return await _payment.CreateQrPaymentAsync(
+                orderId,
+                amount);
+        }
+
+
 
     }
 

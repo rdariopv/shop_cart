@@ -33,6 +33,12 @@ builder.Services.AddHttpClient<OrderService>(client =>
    );
 });
 
+builder.Services.AddHttpClient<PaymentService>(client =>
+{
+    client.BaseAddress = new Uri(
+      builder.Configuration["ApiSettings:BaseUrl"]!);
+});
+
 builder.Services.AddScoped<CircuitHandler, DiagnosticCircuitHandler>();
 
 builder.Services.AddSignalR(e => {

@@ -249,15 +249,27 @@
     }
 
     // ── métodos ───────────────────────────────────────────────────
-    private void HandlePaymentMethodChange(ChangeEventArgs e)
+    private async Task HandlePaymentMethodChange(ChangeEventArgs e)
     {
         _selectedPaymentMethod = e.Value?.ToString() ?? "card";
 
         if (_selectedPaymentMethod == "qr")
         {
+            var orderId = $"TEST-{Guid.NewGuid():N}";
             var total = CartService.Items.Sum(i => i.Price * i.Quantity);
-            _qrImageBase64 = CartService.GenerateQrAsBase64(
-                $"Pago total: ${total:F2}");
+            var result = await CartService.CreateQrPaymentAsync(orderId,total);
+           
+            //_qrImageBase64 = CartService.GenerateQrAsBase64($"Pago total: ${total:F2}");
+            if (result != null &&  result.Success && !string.IsNullOrEmpty(result.QrCode))
+            {
+                _qrImageBase64 =
+                    CartService.GenerateQrAsBase64(
+                        result.QrCode);
+            }
+            else
+            {
+                _qrImageBase64 = null;
+            }
         }
         else
         {
